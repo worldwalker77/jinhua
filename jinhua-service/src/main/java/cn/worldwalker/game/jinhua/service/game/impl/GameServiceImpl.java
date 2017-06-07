@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import cn.worldwalker.game.jinhua.common.cards.CardResource;
 import cn.worldwalker.game.jinhua.common.cards.CardRule;
 import cn.worldwalker.game.jinhua.common.constant.Constant;
+import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
@@ -27,6 +29,7 @@ import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.PlayerStatusEnum;
+import cn.worldwalker.game.jinhua.domain.enums.RoomStatusEnum;
 import cn.worldwalker.game.jinhua.domain.game.Card;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
@@ -131,10 +134,15 @@ public class GameServiceImpl implements GameService {
 		RoomInfo roomInfo = new RoomInfo();
 		roomInfo.setRoomId(roomId);
 		roomInfo.setRoomOwnerId(msg.getPlayerId());
+		roomInfo.setRoomBankerId(msg.getPlayerId());
 		roomInfo.setPayType(msg.getPayType());
 		roomInfo.setTotalGames(msg.getTotalGames());
 		/**创建房间的时候设置当前为第0局*/
 		roomInfo.setCurGame(0);
+		roomInfo.setStakeLimit(Constant.stakeLimit);
+		roomInfo.setStakeTimesLimit(Constant.stakeTimesLimit);
+		/**设置当前房间状态为游戏中*/
+		roomInfo.setStatus(RoomStatusEnum.inGame.status);
 //		roomInfo.setStakeLimit(msg.getStakeLimit());
 //		roomInfo.setStakeTimesLimit(msg.getStakeTimesLimit());
 //		roomInfo.setServerIp(IPUtil.getLocalIp());
@@ -157,8 +165,9 @@ public class GameServiceImpl implements GameService {
 		result.setMsgType(MsgTypeEnum.createRoom.msgType);
 		result.setGameType(GameTypeEnum.jinhua.gameType);
 		result.setData(roomInfo);
-		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
-		
+		if (SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result)) {
+			RoomLockContainer.setLockByRoomId(roomId, new ReentrantLock());
+		}
 		return result;  
 	}
 	
@@ -264,9 +273,11 @@ public class GameServiceImpl implements GameService {
 			roomInfoMap.put("roomId", roomInfo.getRoomId());
 			roomInfoMap.put("roomOwnerId", roomInfo.getRoomOwnerId());
 			roomInfoMap.put("roomBankerId", roomInfo.getRoomBankerId());
-			roomInfoMap.put("curPlayerId", roomInfo.getCurPlayerId());
+			/**庄家第一个说话*/
+			roomInfoMap.put("curPlayerId", roomInfo.getRoomBankerId());
 			roomInfoMap.put("totalGames", roomInfo.getTotalGames());
 			roomInfoMap.put("curGame", roomInfo.getCurGame());
+			result.setData(roomInfoMap);
 			SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
 			return result;
 		}
@@ -293,8 +304,16 @@ public class GameServiceImpl implements GameService {
 		Msg msg = request.getMsg();
 		Long roomId = msg.getRoomId();
 		RoomInfo roomInfo = getRoomInfoFromRedis(roomId);
+		/**如果跟注人不是当前说话人的id，则直接返回提示*/
+		if (!msg.getPlayerId().equals(roomInfo.getCurPlayerId())) {
+			result.setCode(1);
+			result.setDesc("抱歉，还没轮到你说话");
+			result.setMsgType(request.getMsgType());
+			SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
+			return result;
+		}
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
-		/**跟注次数到指定次数的玩家计数*/
+		/**跟注次数到指定次数上限的玩家计数*/
 		int stakeTimesReachCount = 0;
 		/**当前玩家的跟注次数*/
 		int curPlayerStakeTimes = 0;
@@ -309,8 +328,6 @@ public class GameServiceImpl implements GameService {
 				stakeTimesReachCount++;
 			}
 		}
-		Long nextOperatePlayerId = getNextOperatePlayerId(playerList, msg.getPlayerId());
-		roomInfo.setCurPlayerId(nextOperatePlayerId);
 		/**如果玩家的跟注次数都已经到了指定跟注次数上限，则自动明牌*/
 		if (stakeTimesReachCount == playerList.size()) {
 			calScoresAndWinner(roomInfo);
@@ -337,7 +354,7 @@ public class GameServiceImpl implements GameService {
 		data.put("playerId", msg.getPlayerId());
 		data.put("stakeScore", msg.getCurStakeScore());
 		data.put("stakeTimes", curPlayerStakeTimes);
-		data.put("curPlayerId", nextOperatePlayerId);
+		data.put("curPlayerId", getNextOperatePlayerId(playerList, msg.getPlayerId()));
 		SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
 		return result;
 	}
@@ -351,6 +368,11 @@ public class GameServiceImpl implements GameService {
 		Msg msg = request.getMsg();
 		Long roomId = msg.getRoomId();
 		RoomInfo roomInfo = getRoomInfoFromRedis(roomId);
+		/**如果当前房间的状态不是在游戏中，则不处理此请求*/
+		if (!RoomStatusEnum.inGame.status.equals(roomInfo.getStatus())) {
+			log.error("当前房间的状态不是在游戏中,看牌请求无效！");
+			return result;
+		}
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
 		List<Card> cardList = null;
 		for(PlayerInfo player : playerList){
@@ -378,6 +400,14 @@ public class GameServiceImpl implements GameService {
 		Msg msg = request.getMsg();
 		Long roomId = msg.getRoomId();
 		RoomInfo roomInfo = getRoomInfoFromRedis(roomId);
+		/**如果跟注人不是当前说话人的id，则直接返回提示*/
+		if (!msg.getPlayerId().equals(roomInfo.getCurPlayerId())) {
+			result.setCode(1);
+			result.setDesc("抱歉，还没轮到你说话");
+			result.setMsgType(request.getMsgType());
+			SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
+			return result;
+		}
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
 		PlayerInfo selfPlayer = null;
 		PlayerInfo otherPlayer = null;
@@ -454,6 +484,11 @@ public class GameServiceImpl implements GameService {
 		Msg msg = request.getMsg();
 		Long roomId = msg.getRoomId();
 		RoomInfo roomInfo = getRoomInfoFromRedis(roomId);
+		/**如果当前房间的状态不是在游戏中，则不处理此请求*/
+		if (!RoomStatusEnum.inGame.status.equals(roomInfo.getStatus())) {
+			log.error("当前房间的状态不是在游戏中,弃牌请求无效！");
+			return result;
+		}
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
 		Long nextOperatePlayerId = getNextOperatePlayerId(playerList, msg.getPlayerId());
 		/**设置当前玩家状态为主动弃牌*/
@@ -593,6 +628,8 @@ public class GameServiceImpl implements GameService {
 		/**在活着的玩家里面找出赢家*/
 		PlayerInfo curWinnerPlayer = CardRule.comparePlayerCards(getAlivePlayerList(playerList));
 		roomInfo.setCurWinnerId(curWinnerPlayer.getPlayerId());
+		/**设置下一小局的庄家*/
+		roomInfo.setRoomBankerId(curWinnerPlayer.getPlayerId());
 		/**计算每个玩家当前局得分*/
 		for(PlayerInfo player : playerList){
 			if (player.getPlayerId().equals(curWinnerPlayer.getPlayerId())) {
@@ -619,6 +656,13 @@ public class GameServiceImpl implements GameService {
 			}
 		}
 		roomInfo.setTotalWinnerId(totalWinnerId);
+		/**如果当前局数小于总局数，则设置为当前局结束*/
+		if (roomInfo.getCurGame() < roomInfo.getTotalGames()) {
+			roomInfo.setStatus(RoomStatusEnum.curGameOver.status);
+		}else{/**如果当前局数等于总局数，则设置为一圈结束*/
+			roomInfo.setStatus(RoomStatusEnum.totalGameOver.status);
+		}
+		
 	}
 	
 	

@@ -1,10 +1,13 @@
 package cn.worldwalker.game.jinhua.server.dispatcher;
 
+import java.util.concurrent.locks.Lock;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
@@ -26,15 +29,27 @@ public class MsgProcessDispatcher {
 	public void requestDispatcher(ChannelHandlerContext ctx, GameRequest request){
 		
 		/**参数校验*/
-		if (null == request || null == request.getMsg() || request.getMsgType() == null || request.getGameType() == null) {
+		if (null == request || null == request.getMsg() || request.getMsgType() == null) {
 			sendErrorMsg(ctx, "参数不能为空!", request.getMsgType(), request);
 			return;
+		}
+		/**非进入大厅请求，则需要校验gameType*/
+		if (!MsgTypeEnum.entryHall.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
+			if (request.getGameType() == null) {
+				sendErrorMsg(ctx, "参数不能为空!", request.getMsgType(), request);
+				return;
+			}
 		}
 		Msg msg = request.getMsg();
 		Integer msgType = request.getMsgType();
 		MsgTypeEnum msgTypeEnum= MsgTypeEnum.getMsgTypeEnumByType(msgType);
-		
+		Lock lock = null;
 		try {
+			/**除了进入大厅及创建房间之外，其他的请求需要按照房间号对请求进行排队，防止并发情况下数据状态错乱*/
+			if (!MsgTypeEnum.entryHall.equals(msgTypeEnum) && !MsgTypeEnum.createRoom.equals(msgTypeEnum)) {
+				lock = RoomLockContainer.getLockByRoomId(msg.getRoomId());
+				lock.lock();
+			}
 			switch (msgTypeEnum) {
 				case entryHall:
 					if (msg.getPlayerId() == null) {
@@ -105,7 +120,7 @@ public class MsgProcessDispatcher {
 					break;
 				case autoCardsCompare:
 					break;
-
+					
 				default:
 					sendErrorMsg(ctx, "msgType消息类型参数错误", msgType, request);
 					break;
@@ -113,6 +128,10 @@ public class MsgProcessDispatcher {
 		} catch (Exception e) {
 			log.error("requestDispatcher error, request:" + JsonUtil.toJson(request), e);
 			sendErrorMsg(ctx, "系统异常", msgType, request);
+		} finally{
+			if (lock != null) {
+				lock.unlock();
+			}
 		}
 		
 	}

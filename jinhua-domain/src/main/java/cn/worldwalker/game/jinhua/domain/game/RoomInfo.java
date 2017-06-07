@@ -38,6 +38,8 @@ public class RoomInfo implements Serializable{
 	private String serverIp;
 	/**房间的创建时间*/
 	private Date createTime;
+	/**当前房间状态*/
+	private Integer status;
 	
 	private List<PlayerInfo> playerList = new ArrayList<PlayerInfo>();
 	
@@ -124,6 +126,12 @@ public class RoomInfo implements Serializable{
 	}
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
+	}
+	public Integer getStatus() {
+		return status;
+	}
+	public void setStatus(Integer status) {
+		this.status = status;
 	}
 	
 }
