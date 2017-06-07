@@ -41,6 +41,10 @@ public class RoomInfo implements Serializable{
 	/**当前房间状态*/
 	private Integer status;
 	
+	private Long prePlayerId;
+	
+	private Integer preStatus;
+	
 	private List<PlayerInfo> playerList = new ArrayList<PlayerInfo>();
 	
 	public Long getRoomId() {
