@@ -38,4 +38,12 @@ public class RedisController {
 		jedisTemplate.del(key);
 		return result;
 	}
+	
+	@RequestMapping("hdel")
+	@ResponseBody
+	public Result hdel(String key, String field){
+		Result result = new Result();
+		jedisTemplate.hdel(key, field);
+		return result;
+	}
 }

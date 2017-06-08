@@ -87,16 +87,12 @@ public class GameServiceImpl implements GameService {
 	public Result entryHall(ChannelHandlerContext ctx, GameRequest request) {
 		
 		Result result = null;
-		try {
-			result = new Result();
-			result.setMsgType(MsgTypeEnum.entryHall.msgType);
-			Long playerId = request.getMsg().getPlayerId();
-			/**将channel与playerId进行映射*/
-			SessionContainer.addChannel(ctx, playerId);
-			SessionContainer.sendTextMsgByPlayerId(playerId, result);
-		} catch (Exception e) {
-			log.error("entryHall error, request : " + JsonUtil.toJson(request), e);
-		}
+		result = new Result();
+		result.setMsgType(MsgTypeEnum.entryHall.msgType);
+		Long playerId = request.getMsg().getPlayerId();
+		/**将channel与playerId进行映射*/
+		SessionContainer.addChannel(ctx, playerId);
+		SessionContainer.sendTextMsgByPlayerId(playerId, result);
 		return result;
 	}
 	
@@ -113,9 +109,7 @@ public class GameServiceImpl implements GameService {
 				exist = jedisTemplate.hexists(Constant.jinhuaRoomMap, String.valueOf(roomId));
 			} catch (Exception e) {
 				log.error("校验房号在redis中是否存在异常！, request : " + JsonUtil.toJson(request), e);
-				result = new Result(1, "系统异常", request.getMsgType());
-				SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
-				return result;
+				return SessionContainer.sendErrorMsg(ctx, "系统异常", MsgTypeEnum.createRoom.msgType, request);
 			}
 			/**如果不存在则跳出循环，此房间号可以使用*/
 			if (!exist) {
@@ -126,9 +120,7 @@ public class GameServiceImpl implements GameService {
 			i++;
 			if (i >= 3) {
 				log.error("三次生成房号都有重复......");
-				result = new Result(1, "系统异常,请稍后再试！", request.getMsgType());
-				SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
-				return result;
+				return SessionContainer.sendErrorMsg(ctx, "系统异常,请稍后再试！", MsgTypeEnum.createRoom.msgType, request);
 			}
 		}
 		RoomInfo roomInfo = new RoomInfo();
@@ -174,57 +166,48 @@ public class GameServiceImpl implements GameService {
 	@Override
 	public Result entryRoom(ChannelHandlerContext ctx, GameRequest request) {
 		Result result = null;
-		try {
-			Msg msg = request.getMsg();
-			Long roomId = msg.getRoomId();
-			/**参数为空*/
-			if (roomId == null) {
-				result = new Result(1, "房号不能为空", request.getMsgType());
-				SessionContainer.sendTextMsg(ctx, result);
-				return result;
-			}
-			/**房间如果不存在*/
-			if (!jedisTemplate.hexists(Constant.jinhuaRoomMap, String.valueOf(roomId))) {
-				result = new Result(1, "房号不存在", request.getMsgType());
-				SessionContainer.sendTextMsg(ctx, result);
-				return result;
-			}
-			String roomInfoStr = jedisTemplate.hget(Constant.jinhuaRoomMap, String.valueOf(roomId));
-			RoomInfo roomInfo = JsonUtil.toObject(roomInfoStr, RoomInfo.class);
-			/**需要发送消息的玩家id 列表*/
-			Set<Long> playerIdSet = new HashSet<Long>();
-			playerIdSet.add(msg.getPlayerId());
-			List<PlayerInfo> playerList = roomInfo.getPlayerList();
-			/**校验房间中是否已经有玩家信息，如果有的话可能是异常情况下产生的（缓存设置成功，但是客户端没有收到成功加入房间消息，导致客户端再次操作），需要去掉*/
-			for(int i = 0; i < playerList.size(); i++){
-				Long tempPalyerId = playerList.get(i).getPlayerId();
-				if (tempPalyerId.equals(msg.getPlayerId())) {
-					playerList.remove(i);
-				}
-				playerIdSet.add(tempPalyerId);
-			}
-			PlayerInfo playerInfo = new PlayerInfo();
-			playerInfo.setPlayerId(msg.getPlayerId());
-			playerInfo.setNickName("nickName_" + msg.getPlayerId());
-			playerInfo.setHeadImgUrl("http://img.zcool.cn/community/01e282574bc0126ac72525ae39ce5f.jpg");
-			playerInfo.setLevel(1);
-			playerInfo.setOrder(playerList.size() + 1);
-			playerInfo.setStatus(PlayerStatusEnum.notReady.status);
-			playerList.add(playerInfo);
-			/**将当前加入的玩家信息加入房间，并设置进缓存*/
-			jedisTemplate.hset(Constant.jinhuaRoomMap, String.valueOf(roomId), JsonUtil.toJson(roomInfo));
-			result = new Result();
-			result.setMsgType(request.getMsgType());
-			request.setGameType(1);
-			result.setData(roomInfo);
-			/**给此房间中的所有玩家发送消息*/
-			SessionContainer.sendTextMsgByPlayerIdSet(playerIdSet, result);
-		} catch (Exception e) {
-			log.error("进入房间异常, request : " + JsonUtil.toJson(request), e);
-			result = new Result(1, "系统异常", request.getMsgType());
+		Msg msg = request.getMsg();
+		Long roomId = msg.getRoomId();
+		/**参数为空*/
+		if (roomId == null) {
+			result = new Result(1, "房号不能为空", request.getMsgType());
 			SessionContainer.sendTextMsg(ctx, result);
 			return result;
 		}
+		/**房间如果不存在*/
+		if (!jedisTemplate.hexists(Constant.jinhuaRoomMap, String.valueOf(roomId))) {
+			return SessionContainer.sendErrorMsg(ctx, "房号不存在", MsgTypeEnum.entryRoom.msgType, request);
+		}
+		String roomInfoStr = jedisTemplate.hget(Constant.jinhuaRoomMap, String.valueOf(roomId));
+		RoomInfo roomInfo = JsonUtil.toObject(roomInfoStr, RoomInfo.class);
+		/**需要发送消息的玩家id 列表*/
+		Set<Long> playerIdSet = new HashSet<Long>();
+		playerIdSet.add(msg.getPlayerId());
+		List<PlayerInfo> playerList = roomInfo.getPlayerList();
+		/**校验房间中是否已经有玩家信息，如果有的话可能是异常情况下产生的（缓存设置成功，但是客户端没有收到成功加入房间消息，导致客户端再次操作），需要去掉*/
+		for(int i = 0; i < playerList.size(); i++){
+			Long tempPalyerId = playerList.get(i).getPlayerId();
+			if (tempPalyerId.equals(msg.getPlayerId())) {
+				playerList.remove(i);
+			}
+			playerIdSet.add(tempPalyerId);
+		}
+		PlayerInfo playerInfo = new PlayerInfo();
+		playerInfo.setPlayerId(msg.getPlayerId());
+		playerInfo.setNickName("nickName_" + msg.getPlayerId());
+		playerInfo.setHeadImgUrl("http://img.zcool.cn/community/01e282574bc0126ac72525ae39ce5f.jpg");
+		playerInfo.setLevel(1);
+		playerInfo.setOrder(playerList.size() + 1);
+		playerInfo.setStatus(PlayerStatusEnum.notReady.status);
+		playerList.add(playerInfo);
+		/**将当前加入的玩家信息加入房间，并设置进缓存*/
+		jedisTemplate.hset(Constant.jinhuaRoomMap, String.valueOf(roomId), JsonUtil.toJson(roomInfo));
+		result = new Result();
+		result.setMsgType(request.getMsgType());
+		request.setGameType(1);
+		result.setData(roomInfo);
+		/**给此房间中的所有玩家发送消息*/
+		SessionContainer.sendTextMsgByPlayerIdSet(playerIdSet, result);
 		return result;
 	}
 	
@@ -263,6 +246,7 @@ public class GameServiceImpl implements GameService {
 				PlayerInfo player = playerList.get(i);
 				player.setCardList(playerCards.get(i));
 				player.setCardType(CardRule.calculateCardType(playerCards.get(i)));
+				player.setStatus(PlayerStatusEnum.notWatch.status);
 			}
 			roomInfo.setCurPlayerId(roomInfo.getRoomBankerId());
 			
@@ -306,13 +290,48 @@ public class GameServiceImpl implements GameService {
 		RoomInfo roomInfo = getRoomInfoFromRedis(roomId);
 		/**如果跟注人不是当前说话人的id，则直接返回提示*/
 		if (!msg.getPlayerId().equals(roomInfo.getCurPlayerId())) {
-			result.setCode(1);
-			result.setDesc("抱歉，还没轮到你说话");
-			result.setMsgType(request.getMsgType());
-			SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
-			return result;
+			return SessionContainer.sendErrorMsg(ctx, "抱歉，还没轮到你说话", MsgTypeEnum.stake.msgType, request);
 		}
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
+		Integer prePlayerStatus = roomInfo.getPrePlayerStatus();
+		Integer prePlayerStakeScore = roomInfo.getPrePlayerStakeScore();
+		if (prePlayerStakeScore != null) {
+			/**前一个玩家未看牌*/
+			if (PlayerStatusEnum.notWatch.status.equals(prePlayerStatus)) {
+				/**当前玩家未看牌*/
+				if (PlayerStatusEnum.notWatch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))) {
+					/**如果当前玩家的跟注分数小于前一个玩家，则提示错误信息*/
+					if (msg.getCurStakeScore() < prePlayerStakeScore) {
+						return SessionContainer.sendErrorMsg(ctx, "你的跟注分数必须大于或等于前一个玩家", MsgTypeEnum.stake.msgType, request);
+					}
+					/**当前玩家已看牌*/
+				}else if (PlayerStatusEnum.watch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))){
+					/**当前玩家的跟注分数如果小于前一个玩家的跟注分数的2倍，则提示错误信息*/
+					if (msg.getCurStakeScore() < prePlayerStakeScore*2) {
+						return SessionContainer.sendErrorMsg(ctx, "你的跟注分数必须大于或等于前一个玩家", MsgTypeEnum.stake.msgType, request);
+					}
+				}else{
+					return SessionContainer.sendErrorMsg(ctx, "当前玩家状态错误，必须是未看牌或者已看牌", MsgTypeEnum.stake.msgType, request);
+				}
+				/**前一个玩家已看牌*/
+			}else{
+				/**当前玩家未看牌*/
+				if (PlayerStatusEnum.notWatch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))) {
+					/**如果当前玩家的跟注分数的2倍小于前一个玩家，则提示错误信息*/
+					if (2*msg.getCurStakeScore() < prePlayerStakeScore) {
+						return SessionContainer.sendErrorMsg(ctx, "你的跟注分数必须大于或等于前一个玩家的跟注分数一半", MsgTypeEnum.stake.msgType, request);
+					}
+					/**当前玩家已看牌*/
+				}else if (PlayerStatusEnum.watch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))){
+					/**当前玩家的跟注分数如果小于前一个玩家的跟注分数的倍，则提示错误信息*/
+					if (msg.getCurStakeScore() < prePlayerStakeScore) {
+						return SessionContainer.sendErrorMsg(ctx, "你的跟注分数必须大于或等于前一个玩家", MsgTypeEnum.stake.msgType, request);
+					}
+				}else{
+					return SessionContainer.sendErrorMsg(ctx, "当前玩家状态错误，必须是未看牌或者已看牌", MsgTypeEnum.stake.msgType, request);
+				}
+			}
+		}
 		/**跟注次数到指定次数上限的玩家计数*/
 		int stakeTimesReachCount = 0;
 		/**当前玩家的跟注次数*/
@@ -492,7 +511,7 @@ public class GameServiceImpl implements GameService {
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
 		Long nextOperatePlayerId = getNextOperatePlayerId(playerList, msg.getPlayerId());
 		/**设置当前玩家状态为主动弃牌*/
-		setCurPlayerStatus(playerList, msg.getPlayerId(), PlayerStatusEnum.autoDiscard);
+		setPlayerStatus(playerList, msg.getPlayerId(), PlayerStatusEnum.autoDiscard);
 		
 		int alivePlayerCount = getAlivePlayerCount(playerList);
 		/**如果剩余或者的玩家数为1*/
@@ -569,12 +588,27 @@ public class GameServiceImpl implements GameService {
 	 * @param playerId
 	 * @param statusEnum
 	 */
-	private void setCurPlayerStatus(List<PlayerInfo> playerList, Long playerId, PlayerStatusEnum statusEnum){
+	private void setPlayerStatus(List<PlayerInfo> playerList, Long playerId, PlayerStatusEnum statusEnum){
 		for(PlayerInfo player : playerList){
 			if (player.getPlayerId().equals(playerId)) {
 				player.setStatus(statusEnum.status);
 			}
 		}
+	}
+	
+	/**
+	 * 设置玩家状态
+	 * @param playerList
+	 * @param playerId
+	 * @param statusEnum
+	 */
+	private Integer getPlayerStatus(List<PlayerInfo> playerList, Long playerId){
+		for(PlayerInfo player : playerList){
+			if (player.getPlayerId().equals(playerId)) {
+				return player.getStatus();
+			}
+		}
+		return null;
 	}
 	
 	private long genPlayerId(){
@@ -664,7 +698,6 @@ public class GameServiceImpl implements GameService {
 		}
 		
 	}
-	
 	
 	private Long getNextOperatePlayerId(List<PlayerInfo> playerList, Long curPlayerId){
 		

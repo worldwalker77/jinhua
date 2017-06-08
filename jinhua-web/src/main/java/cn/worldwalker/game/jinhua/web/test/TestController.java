@@ -51,4 +51,14 @@ public class TestController {
 		return result;
 	}
 	
+	
+	@RequestMapping("sendMsgToPlayerById")
+	@ResponseBody
+	public Result sendMsgToPlayerById(HttpServletRequest request,HttpServletResponse response, Long playerId, String msg){
+		Result result = new Result();
+		result.setData(msg);
+		SessionContainer.sendTextMsgByPlayerId(playerId, result);
+		return result;
+	}
+	
 }

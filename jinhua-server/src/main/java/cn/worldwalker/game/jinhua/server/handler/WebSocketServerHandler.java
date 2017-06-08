@@ -55,8 +55,7 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	      @Override
 	      public void channelActive(ChannelHandlerContext ctx) throws Exception {
 	    	  
-//	    	  String ip = IPUtil.getLocalIp();
-	    	  String ip = "119.23.57.236";
+	    	  String ip = IPUtil.getLocalIp();
 	    	  if (StringUtils.isNotBlank(ip)) {
     		     /**连接加入，将此ip对应的连接数+1，后续做负载均衡会用到*/
 				 jedisTemplate.hincrBy(Constant.jinhuaIpConnectCountMap, ip, 1);
@@ -69,8 +68,7 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	      public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 	    	  System.out.println("channelInactive");
 	    	  SessionContainer.removeSession(ctx);
-//	    	  String ip = IPUtil.getLocalIp();
-	    	  String ip = "119.23.57.236";
+	    	  String ip = IPUtil.getLocalIp();
 	    	  if (StringUtils.isNotBlank(ip)) {
     		     /**连接断开，将此ip对应的连接数-1，后续做负载均衡会用到*/
 				 jedisTemplate.hincrBy(Constant.jinhuaIpConnectCountMap, ip, -1);

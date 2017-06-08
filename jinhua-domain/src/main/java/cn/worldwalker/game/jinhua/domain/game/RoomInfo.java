@@ -41,9 +41,12 @@ public class RoomInfo implements Serializable{
 	/**当前房间状态*/
 	private Integer status;
 	
+	/**前一个说话玩家的id*/
 	private Long prePlayerId;
-	
-	private Integer preStatus;
+	/**前一个说话玩家跟注时的状态,是看牌还是未看牌，主要是为了校验当前玩家的跟注是否符合要求*/
+	private Integer prePlayerStatus;
+	/**前一个说话玩家的跟注分数*/
+	private Integer prePlayerStakeScore;
 	
 	private List<PlayerInfo> playerList = new ArrayList<PlayerInfo>();
 	
@@ -136,6 +139,24 @@ public class RoomInfo implements Serializable{
 	}
 	public void setStatus(Integer status) {
 		this.status = status;
+	}
+	public Long getPrePlayerId() {
+		return prePlayerId;
+	}
+	public void setPrePlayerId(Long prePlayerId) {
+		this.prePlayerId = prePlayerId;
+	}
+	public Integer getPrePlayerStatus() {
+		return prePlayerStatus;
+	}
+	public void setPrePlayerStatus(Integer prePlayerStatus) {
+		this.prePlayerStatus = prePlayerStatus;
+	}
+	public Integer getPrePlayerStakeScore() {
+		return prePlayerStakeScore;
+	}
+	public void setPrePlayerStakeScore(Integer prePlayerStakeScore) {
+		this.prePlayerStakeScore = prePlayerStakeScore;
 	}
 	
 }

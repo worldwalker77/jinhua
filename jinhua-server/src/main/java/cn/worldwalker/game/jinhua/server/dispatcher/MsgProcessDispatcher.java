@@ -30,13 +30,13 @@ public class MsgProcessDispatcher {
 		
 		/**参数校验*/
 		if (null == request || null == request.getMsg() || request.getMsgType() == null) {
-			sendErrorMsg(ctx, "参数不能为空!", request.getMsgType(), request);
+			SessionContainer.sendErrorMsg(ctx, "参数不能为空", request.getMsgType(), request);
 			return;
 		}
 		/**非进入大厅请求，则需要校验gameType*/
 		if (!MsgTypeEnum.entryHall.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
 			if (request.getGameType() == null) {
-				sendErrorMsg(ctx, "参数不能为空!", request.getMsgType(), request);
+				SessionContainer.sendErrorMsg(ctx, "参数不能为空", request.getMsgType(), request);
 				return;
 			}
 		}
@@ -53,28 +53,28 @@ public class MsgProcessDispatcher {
 			switch (msgTypeEnum) {
 				case entryHall:
 					if (msg.getPlayerId() == null) {
-						sendErrorMsg(ctx, "msgType消息类型参数错误", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.entryHall(ctx, request);
 					break;
 				case createRoom:
 					if (msg.getPlayerId() == null || msg.getPayType() == null || msg.getTotalGames() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.createRoom(ctx, request);
 					break;
 				case entryRoom:
 					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.entryRoom(ctx, request);
 					break;
 				case ready:
 					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.ready(ctx, request);
@@ -83,28 +83,28 @@ public class MsgProcessDispatcher {
 					break;
 				case stake:
 					if (msg.getPlayerId() == null || msg.getRoomId() == null || msg.getCurStakeScore() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.stake(ctx, request);
 					break;
 				case watchCards:
 					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.watchCards(ctx, request);
 					break;
 				case manualCardsCompare:
 					if (msg.getPlayerId() == null || msg.getOtherPlayerId() == null || msg.getCurStakeScore() == null || msg.getRoomId() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.manualCardsCompare(ctx, request);
 					break;
 				case discardCards:
 					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.discardCards(ctx, request);
@@ -113,7 +113,7 @@ public class MsgProcessDispatcher {
 					break;
 				case totalSettlement:
 					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
-						sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
 					gameService.totalSettlement(ctx, request);
@@ -122,23 +122,17 @@ public class MsgProcessDispatcher {
 					break;
 					
 				default:
-					sendErrorMsg(ctx, "msgType消息类型参数错误", msgType, request);
+					SessionContainer.sendErrorMsg(ctx, "msgType消息类型参数错误", msgType, request);
 					break;
 				}
 		} catch (Exception e) {
 			log.error("requestDispatcher error, request:" + JsonUtil.toJson(request), e);
-			sendErrorMsg(ctx, "系统异常", msgType, request);
+			SessionContainer.sendErrorMsg(ctx, "系统异常", msgType, request);
 		} finally{
 			if (lock != null) {
 				lock.unlock();
 			}
 		}
 		
-	}
-	
-	private void sendErrorMsg(ChannelHandlerContext ctx, String errorDesc, Integer msgType, GameRequest request){
-		log.error(errorDesc + ", request:" + JsonUtil.toJson(request));
-		Result result = new Result(1, errorDesc, msgType, GameTypeEnum.jinhua.gameType);
-		SessionContainer.sendTextMsg(ctx, result);
 	}
 }

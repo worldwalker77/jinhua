@@ -15,6 +15,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
+import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
+import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 
 public class SessionContainer {
@@ -35,7 +37,7 @@ public class SessionContainer {
 		Channel channel = getChannel(playerId);
 		if (null != channel) {
 			try {
-				channel.write(new TextWebSocketFrame(JsonUtil.toJson(result)));
+				channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
 			} catch (Exception e) {
 				log.error("sendTextMsgByPlayerId error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
 				return false;
@@ -50,7 +52,7 @@ public class SessionContainer {
 			Channel channel = getChannel(playerId);
 			if (null != channel) {
 				try {
-					channel.write(new TextWebSocketFrame(JsonUtil.toJson(result)));
+					channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
 				} catch (Exception e) {
 					log.error("sendTextMsgByPlayerIdList error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
 				}
@@ -60,10 +62,21 @@ public class SessionContainer {
 	
 	public static void sendTextMsg(ChannelHandlerContext ctx, Result result){
 		try {
-			ctx.channel().write(new TextWebSocketFrame(JsonUtil.toJson(result)));
+			ctx.channel().writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
 		} catch (Exception e) {
 			log.error("sendTextMsgByPlayerId error, result : " + JsonUtil.toJson(result), e);
 		}
+	}
+	
+	 public static Result sendErrorMsg(ChannelHandlerContext ctx, String errorDesc, Integer msgType, GameRequest request){
+		log.error(errorDesc + ", request:" + JsonUtil.toJson(request));
+		Result result = new Result(1, errorDesc, msgType, GameTypeEnum.jinhua.gameType);
+		try {
+			sendTextMsg(ctx, result);
+		} catch (Exception e) {
+			log.error("sendErrorMsg error, result : " + JsonUtil.toJson(result), e);
+		}
+		return result;
 	}
 	
 	public static void removeSession(ChannelHandlerContext ctx){
@@ -74,6 +87,8 @@ public class SessionContainer {
 	public static Map<Long, Channel> getSessionMap() {
 		return sessionMap;
 	}
+	
+	
 	
 	public static void main(String[] args) {
 		Map<String, Long> map = new HashMap<String, Long>();
