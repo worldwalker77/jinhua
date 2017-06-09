@@ -247,6 +247,12 @@ public class GameServiceImpl implements GameService {
 				player.setCardList(playerCards.get(i));
 				player.setCardType(CardRule.calculateCardType(playerCards.get(i)));
 				player.setStatus(PlayerStatusEnum.notWatch.status);
+				player.setStakeTimes(0);
+				player.setCurTotalStakeScore(0);
+				player.setCurScore(0);
+				player.setTotalScore(0);
+				player.setWinTimes(0);
+				player.setLoseTimes(0);
 			}
 			roomInfo.setCurPlayerId(roomInfo.getRoomBankerId());
 			
@@ -308,7 +314,7 @@ public class GameServiceImpl implements GameService {
 				}else if (PlayerStatusEnum.watch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))){
 					/**当前玩家的跟注分数如果小于前一个玩家的跟注分数的2倍，则提示错误信息*/
 					if (msg.getCurStakeScore() < prePlayerStakeScore*2) {
-						return SessionContainer.sendErrorMsg(ctx, "你的跟注分数必须大于或等于前一个玩家", MsgTypeEnum.stake.msgType, request);
+						return SessionContainer.sendErrorMsg(ctx, "你的跟注分数必须大于或等于前一个玩家跟注分数的两倍", MsgTypeEnum.stake.msgType, request);
 					}
 				}else{
 					return SessionContainer.sendErrorMsg(ctx, "当前玩家状态错误，必须是未看牌或者已看牌", MsgTypeEnum.stake.msgType, request);
@@ -323,7 +329,7 @@ public class GameServiceImpl implements GameService {
 					}
 					/**当前玩家已看牌*/
 				}else if (PlayerStatusEnum.watch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))){
-					/**当前玩家的跟注分数如果小于前一个玩家的跟注分数的倍，则提示错误信息*/
+					/**当前玩家的跟注分数如果小于前一个玩家的跟注分数，则提示错误信息*/
 					if (msg.getCurStakeScore() < prePlayerStakeScore) {
 						return SessionContainer.sendErrorMsg(ctx, "你的跟注分数必须大于或等于前一个玩家", MsgTypeEnum.stake.msgType, request);
 					}
@@ -343,31 +349,40 @@ public class GameServiceImpl implements GameService {
 				player.setCurTotalStakeScore(player.getCurTotalStakeScore() + msg.getCurStakeScore());
 				curPlayerStakeTimes = player.getStakeTimes();
 			}
-			if (player.getStakeTimes().equals(roomInfo.getStakeTimesLimit())) {
-				stakeTimesReachCount++;
+			if (PlayerStatusEnum.notWatch.status.equals(player.getStatus()) || PlayerStatusEnum.watch.status.equals(player.getStatus())) {
+				if (player.getStakeTimes().equals(roomInfo.getStakeTimesLimit())) {
+					stakeTimesReachCount++;
+				}
 			}
 		}
-		/**如果玩家的跟注次数都已经到了指定跟注次数上限，则自动明牌*/
-		if (stakeTimesReachCount == playerList.size()) {
+		/**如果活着的玩家的跟注次数都已经到了指定跟注次数上限，则自动明牌，注意明牌的时候主动弃牌的不用明*/
+		if (stakeTimesReachCount == getAlivePlayerCount(playerList)) {
 			calScoresAndWinner(roomInfo);
 			setRoomInfoToRedis(roomId, roomInfo);
 			/**此处new一个新对象，是返回给客户端需要返回的数据，不需要返回的数据则隐藏掉*/
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 			for(PlayerInfo player : playerList){
-				PlayerInfo newPlayer = new PlayerInfo();
-				newPlayer.setPlayerId(player.getPlayerId());
-				newPlayer.setCurScore(player.getCurScore());
-				newPlayer.setStatus(player.getStatus());
-				newPlayer.setCardType(player.getCardType());
-				newPlayer.setCardList(player.getCardList());
-				newRoomInfo.getPlayerList().add(newPlayer);
+				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
+					PlayerInfo newPlayer = new PlayerInfo();
+					newPlayer.setPlayerId(player.getPlayerId());
+					newPlayer.setCurScore(player.getCurScore());
+					newPlayer.setStatus(player.getStatus());
+					newPlayer.setCardType(player.getCardType());
+					newPlayer.setCardList(player.getCardList());
+					newRoomInfo.getPlayerList().add(newPlayer);
+				}
 			}
 			result.setMsgType(MsgTypeEnum.autoCardsCompare.msgType);
 			result.setData(newRoomInfo);
 			SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 			return result;
 		}
+		Long curPlayerId = getNextOperatePlayerId(playerList, msg.getPlayerId());
+		roomInfo.setCurPlayerId(curPlayerId);
+		roomInfo.setPrePlayerId(msg.getPlayerId());
+		roomInfo.setPrePlayerStatus(getPlayerStatus(playerList, msg.getPlayerId()));
+		roomInfo.setPrePlayerStakeScore(msg.getCurStakeScore());
 		setRoomInfoToRedis(roomId, roomInfo);
 		result.setMsgType(MsgTypeEnum.stake.msgType);
 		data.put("playerId", msg.getPlayerId());
@@ -401,6 +416,7 @@ public class GameServiceImpl implements GameService {
 			}
 		}
 		setRoomInfoToRedis(roomId, roomInfo);
+		result.setMsgType(MsgTypeEnum.watchCards.msgType);
 		data.put("playerId", msg.getPlayerId());
 		long msgId = SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), result);
 		data.put("cards", cardList);
@@ -451,13 +467,15 @@ public class GameServiceImpl implements GameService {
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 			for(PlayerInfo player : playerList){
-				PlayerInfo newPlayer = new PlayerInfo();
-				newPlayer.setPlayerId(player.getPlayerId());
-				newPlayer.setCurScore(player.getCurScore());
-				newPlayer.setStatus(player.getStatus());
-				newPlayer.setCardType(player.getCardType());
-				newPlayer.setCardList(player.getCardList());
-				newRoomInfo.getPlayerList().add(newPlayer);
+				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
+					PlayerInfo newPlayer = new PlayerInfo();
+					newPlayer.setPlayerId(player.getPlayerId());
+					newPlayer.setCurScore(player.getCurScore());
+					newPlayer.setStatus(player.getStatus());
+					newPlayer.setCardType(player.getCardType());
+					newPlayer.setCardList(player.getCardList());
+					newRoomInfo.getPlayerList().add(newPlayer);
+				}
 			}
 			result.setMsgType(MsgTypeEnum.autoCardsCompare.msgType);
 			result.setData(newRoomInfo);
@@ -465,7 +483,7 @@ public class GameServiceImpl implements GameService {
 			return result;
 		}
 		
-		/**如果活着的玩家大于2家，则只需要将此两个玩家比牌*/
+		/**如果活着的玩家大于2家，则只需要将此两个玩比牌*/
 		Long curPlayerId = null;
 		int re = CardRule.compareTwoPlayerCards(selfPlayer, otherPlayer);
 		if (re > 0) {
@@ -512,21 +530,24 @@ public class GameServiceImpl implements GameService {
 		setPlayerStatus(playerList, msg.getPlayerId(), PlayerStatusEnum.autoDiscard);
 		
 		int alivePlayerCount = getAlivePlayerCount(playerList);
-		/**如果剩余或者的玩家数为1*/
+		/**如果剩余或者的玩家数为1，自动明牌*/
 		if (alivePlayerCount == 1) {
 			calScoresAndWinner(roomInfo);
 			setRoomInfoToRedis(roomId, roomInfo);
 			/**此处new一个新对象，是返回给客户端需要返回的数据，不需要返回的数据则隐藏掉*/
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
+			newRoomInfo.setRoomBankerId(roomInfo.getRoomBankerId());
 			for(PlayerInfo player : playerList){
-				PlayerInfo newPlayer = new PlayerInfo();
-				newPlayer.setPlayerId(player.getPlayerId());
-				newPlayer.setCurScore(player.getCurScore());
-				newPlayer.setStatus(player.getStatus());
-				newPlayer.setCardType(player.getCardType());
-				newPlayer.setCardList(player.getCardList());
-				newRoomInfo.getPlayerList().add(newPlayer);
+				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
+					PlayerInfo newPlayer = new PlayerInfo();
+					newPlayer.setPlayerId(player.getPlayerId());
+					newPlayer.setCurScore(player.getCurScore());
+					newPlayer.setStatus(player.getStatus());
+					newPlayer.setCardType(player.getCardType());
+					newPlayer.setCardList(player.getCardList());
+					newRoomInfo.getPlayerList().add(newPlayer);
+				}
 			}
 			result.setMsgType(MsgTypeEnum.discardCards.msgType);
 			result.setData(newRoomInfo);
@@ -664,17 +685,14 @@ public class GameServiceImpl implements GameService {
 		roomInfo.setRoomBankerId(curWinnerPlayer.getPlayerId());
 		/**计算每个玩家当前局得分*/
 		for(PlayerInfo player : playerList){
-			if (player.getPlayerId().equals(curWinnerPlayer.getPlayerId())) {
-				player.setCurScore((player.getCurScore()==null?0:player.getCurScore()) + (player.getCurTotalStakeScore() == null?0:player.getCurTotalStakeScore()));
-			}else{
-				player.setCurScore((player.getCurScore()==null?0:player.getCurScore()) - (player.getCurTotalStakeScore() == null?0:player.getCurTotalStakeScore()));
-				curWinnerPlayer.setCurScore((curWinnerPlayer.getCurScore()==null?0:curWinnerPlayer.getCurScore()) + (player.getCurTotalStakeScore() == null?0:player.getCurTotalStakeScore()));
-				
+			if (!player.getPlayerId().equals(curWinnerPlayer.getPlayerId())) {
+				player.setCurScore(player.getCurScore() - player.getCurTotalStakeScore() - 1);
+				curWinnerPlayer.setCurScore(curWinnerPlayer.getCurScore() + player.getCurTotalStakeScore() + 1);
 			}
 		}
 		/**计算每个玩家总得分*/
 		for(PlayerInfo player : playerList){
-			player.setTotalScore((player.getTotalScore()==null?0:player.getTotalScore()) + (player.getCurScore()==null?0:player.getCurScore()));
+			player.setTotalScore(player.getTotalScore() + player.getCurScore());
 		}
 		
 		/**设置房间的总赢家*/
