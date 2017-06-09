@@ -157,7 +157,7 @@ public class GameServiceImpl implements GameService {
 		result.setMsgType(MsgTypeEnum.createRoom.msgType);
 		result.setGameType(GameTypeEnum.jinhua.gameType);
 		result.setData(roomInfo);
-		if (SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result)) {
+		if (SessionContainer.sendTextMsgByPlayerId(roomId, msg.getPlayerId(), result)) {
 			RoomLockContainer.setLockByRoomId(roomId, new ReentrantLock());
 		}
 		return result;  
@@ -207,7 +207,7 @@ public class GameServiceImpl implements GameService {
 		request.setGameType(1);
 		result.setData(roomInfo);
 		/**给此房间中的所有玩家发送消息*/
-		SessionContainer.sendTextMsgByPlayerIdSet(playerIdSet, result);
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, playerIdSet, result);
 		return result;
 	}
 	
@@ -262,14 +262,14 @@ public class GameServiceImpl implements GameService {
 			roomInfoMap.put("totalGames", roomInfo.getTotalGames());
 			roomInfoMap.put("curGame", roomInfo.getCurGame());
 			result.setData(roomInfoMap);
-			SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+			SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 			return result;
 		}
 		setRoomInfoToRedis(roomId, roomInfo);
 		result.setGameType(1);
 		result.setMsgType(request.getMsgType());
 		data.put("playerId", msg.getPlayerId());
-		SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 		return result;
 	}
 	
@@ -365,7 +365,7 @@ public class GameServiceImpl implements GameService {
 			}
 			result.setMsgType(MsgTypeEnum.autoCardsCompare.msgType);
 			result.setData(newRoomInfo);
-			SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+			SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 			return result;
 		}
 		setRoomInfoToRedis(roomId, roomInfo);
@@ -374,7 +374,7 @@ public class GameServiceImpl implements GameService {
 		data.put("stakeScore", msg.getCurStakeScore());
 		data.put("stakeTimes", curPlayerStakeTimes);
 		data.put("curPlayerId", getNextOperatePlayerId(playerList, msg.getPlayerId()));
-		SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 		return result;
 	}
 	
@@ -402,8 +402,9 @@ public class GameServiceImpl implements GameService {
 		}
 		setRoomInfoToRedis(roomId, roomInfo);
 		data.put("playerId", msg.getPlayerId());
-		SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), result);
+		long msgId = SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), result);
 		data.put("cards", cardList);
+		result.setMsgId(msgId);
 		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
 		return result;
 	}
@@ -421,10 +422,7 @@ public class GameServiceImpl implements GameService {
 		RoomInfo roomInfo = getRoomInfoFromRedis(roomId);
 		/**如果跟注人不是当前说话人的id，则直接返回提示*/
 		if (!msg.getPlayerId().equals(roomInfo.getCurPlayerId())) {
-			result.setCode(1);
-			result.setDesc("抱歉，还没轮到你说话");
-			result.setMsgType(request.getMsgType());
-			SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
+			SessionContainer.sendErrorMsg(ctx, "抱歉，还没轮到你说话", MsgTypeEnum.manualCardsCompare.msgType, request);
 			return result;
 		}
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
@@ -463,7 +461,7 @@ public class GameServiceImpl implements GameService {
 			}
 			result.setMsgType(MsgTypeEnum.autoCardsCompare.msgType);
 			result.setData(newRoomInfo);
-			SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+			SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 			return result;
 		}
 		
@@ -487,7 +485,7 @@ public class GameServiceImpl implements GameService {
 		}
 		roomInfo.setCurPlayerId(curPlayerId);
 		setRoomInfoToRedis(roomId, roomInfo);
-		SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 		return result;
 	}
 	/**
@@ -532,14 +530,14 @@ public class GameServiceImpl implements GameService {
 			}
 			result.setMsgType(MsgTypeEnum.discardCards.msgType);
 			result.setData(newRoomInfo);
-			SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+			SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 			return result;
 		}
 		setRoomInfoToRedis(roomId, roomInfo);
 		/**如果剩余或者的玩家数大于1,则给所有的玩家广播通知此玩家弃牌*/
 		data.put("playerId", msg.getPlayerId());
 		data.put("curPlayerId", nextOperatePlayerId);
-		SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 		return result;
 		
 	}
@@ -579,7 +577,7 @@ public class GameServiceImpl implements GameService {
 		}
 		result.setMsgType(MsgTypeEnum.totalSettlement.msgType);
 		result.setData(newRoomInfo);
-		SessionContainer.sendTextMsgByPlayerIdSet(getPlayerIdSet(playerList), result);
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 		return result;
 	}
 	/**

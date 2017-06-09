@@ -13,15 +13,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import cn.worldwalker.game.jinhua.common.constant.Constant;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
+import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 
+@Component
 public class SessionContainer {
 	
 	private static final Log log = LogFactory.getLog(SessionContainer.class);
+	
+	private static JedisTemplate jedisTemplate;
 	
 	private static Map<Long, Channel> sessionMap = new ConcurrentHashMap<Long, Channel>();
 	
@@ -46,8 +53,41 @@ public class SessionContainer {
 		}
 		return false;
 	}
+//	
+//	public static void sendTextMsgByPlayerIdSet(Set<Long> playerIdSet, Result result){
+//		for(Long playerId : playerIdSet){
+//			Channel channel = getChannel(playerId);
+//			if (null != channel) {
+//				try {
+//					channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
+//				} catch (Exception e) {
+//					log.error("sendTextMsgByPlayerIdList error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
+//				}
+//			}
+//		}
+//	}
 	
-	public static void sendTextMsgByPlayerIdSet(Set<Long> playerIdSet, Result result){
+	public static boolean sendTextMsgByPlayerId(Long roomId, Long playerId, Result result){
+		long msgId = 0;
+		Channel channel = getChannel(playerId);
+		if (null != channel) {
+			/**从redis通过自增获取当前房间的msgId，这里不做异常捕获，交给MsgProcessDispatcher层进行统一捕获，*/
+			msgId = jedisTemplate.hincrBy(Constant.jinhuaRoomMsgIdMap, String.valueOf(roomId), 1);
+			result.setMsgId(msgId);
+			try {
+				channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
+			} catch (Exception e) {
+				log.error("sendTextMsgByPlayerId error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public static long sendTextMsgByPlayerIdSet(Long roomId, Set<Long> playerIdSet, Result result){
+		/**从redis通过自增获取当前房间的msgId，这里不做异常捕获，交给MsgProcessDispatcher层进行统一捕获，*/
+		long msgId = jedisTemplate.hincrBy(Constant.jinhuaRoomMsgIdMap, String.valueOf(roomId), 1);
+		result.setMsgId(msgId);
 		for(Long playerId : playerIdSet){
 			Channel channel = getChannel(playerId);
 			if (null != channel) {
@@ -58,6 +98,7 @@ public class SessionContainer {
 				}
 			}
 		}
+		return msgId;
 	}
 	
 	public static void sendTextMsg(ChannelHandlerContext ctx, Result result){
@@ -88,8 +129,11 @@ public class SessionContainer {
 		return sessionMap;
 	}
 	
-	
-	
+	 @Autowired(required = true)
+	public void setJedisTemplate(JedisTemplate jedisTemplate) {
+		SessionContainer.jedisTemplate = jedisTemplate;
+	}
+
 	public static void main(String[] args) {
 		Map<String, Long> map = new HashMap<String, Long>();
 		map.put("1", 1L);
