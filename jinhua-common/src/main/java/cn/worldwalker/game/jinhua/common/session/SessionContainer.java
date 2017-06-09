@@ -80,8 +80,9 @@ public class SessionContainer {
 				log.error("sendTextMsgByPlayerId error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
 				return false;
 			}
+			return true;
 		}
-		return true;
+		return false;
 	}
 	
 	public static long sendTextMsgByPlayerIdSet(Long roomId, Set<Long> playerIdSet, Result result){

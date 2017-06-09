@@ -1,5 +1,7 @@
 package cn.worldwalker.game.jinhua.server.dispatcher;
 
+import io.netty.channel.ChannelHandlerContext;
+
 import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
@@ -10,13 +12,10 @@ import org.springframework.stereotype.Service;
 import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
-import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
-import cn.worldwalker.game.jinhua.domain.result.Result;
 import cn.worldwalker.game.jinhua.service.game.GameService;
-import io.netty.channel.ChannelHandlerContext;
 
 @Service
 public class MsgProcessDispatcher {
@@ -119,6 +118,14 @@ public class MsgProcessDispatcher {
 					gameService.totalSettlement(ctx, request);
 					break;
 				case autoCardsCompare:
+					break;
+				case dissolveRoom:
+					break;
+				case agreeDissolveRoom:
+					break;
+				case disagreeDissolveRoom:
+					break;
+				case successDissolveRoom://服务端主动推送的消息
 					break;
 					
 				default:

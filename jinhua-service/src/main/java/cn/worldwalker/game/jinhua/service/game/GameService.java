@@ -32,4 +32,10 @@ public interface GameService {
 	
 	public Result totalSettlement(ChannelHandlerContext ctx, GameRequest request);
 	
+	public Result dissolveRoom(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result agreeDissolveRoom(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result disagreeDissolveRoom(ChannelHandlerContext ctx, GameRequest request);
+	
 }

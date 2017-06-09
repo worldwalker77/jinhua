@@ -14,7 +14,10 @@ public enum MsgTypeEnum {
 	curSettlement(10, "大结算"),
 	totalSettlement(11, "大结算"),
 	autoCardsCompare(12, "到达跟注数量上限的自动比牌"),
-	dissolveRoom(13, "解散房间");
+	dissolveRoom(13, "解散房间"),
+	agreeDissolveRoom(14, "同意解散房间"),
+	disagreeDissolveRoom(15, "不同意解散房间"),
+	successDissolveRoom(16, "成功解散房间通知");
 	
 	public int msgType;
 	public String desc;

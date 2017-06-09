@@ -15,7 +15,7 @@ public class PlayerInfo {
 	private Integer order;
 	/**用户级别*/
 	private Integer level;
-	/**玩家状态 1 未准备 2 准备*/
+	/**玩家状态 1 未准备 2 准备 3未看牌 4看牌 5 主动弃牌 6 被动弃牌 */
 	private Integer status;
 	/**牌型*/
 	private Integer cardType;
@@ -35,6 +35,8 @@ public class PlayerInfo {
 	private Integer winTimes;
 	/**输的局数*/
 	private Integer loseTimes;
+	/**1 同意解散 2不同意解散*/
+	private Integer dissolveStatus;
 	
 	public Long getPlayerId() {
 		return playerId;
@@ -125,6 +127,12 @@ public class PlayerInfo {
 	}
 	public void setLoseTimes(Integer loseTimes) {
 		this.loseTimes = loseTimes;
+	}
+	public Integer getDissolveStatus() {
+		return dissolveStatus;
+	}
+	public void setDissolveStatus(Integer dissolveStatus) {
+		this.dissolveStatus = dissolveStatus;
 	}
 	
 }
