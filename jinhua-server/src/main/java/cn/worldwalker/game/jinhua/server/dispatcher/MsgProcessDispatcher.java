@@ -47,6 +47,10 @@ public class MsgProcessDispatcher {
 			/**除了进入大厅及创建房间之外，其他的请求需要按照房间号对请求进行排队，防止并发情况下数据状态错乱*/
 			if (!MsgTypeEnum.entryHall.equals(msgTypeEnum) && !MsgTypeEnum.createRoom.equals(msgTypeEnum)) {
 				lock = RoomLockContainer.getLockByRoomId(msg.getRoomId());
+				if (lock == null) {
+					SessionContainer.sendErrorMsg(ctx, "此房间已经解散或不存在", msgType, request);
+					return;
+				}
 				lock.lock();
 			}
 			switch (msgTypeEnum) {
@@ -120,10 +124,25 @@ public class MsgProcessDispatcher {
 				case autoCardsCompare:
 					break;
 				case dissolveRoom:
+					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						return;
+					}
+					gameService.dissolveRoom(ctx, request);
 					break;
 				case agreeDissolveRoom:
+					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						return;
+					}
+					gameService.agreeDissolveRoom(ctx, request);
 					break;
 				case disagreeDissolveRoom:
+					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						return;
+					}
+					gameService.disagreeDissolveRoom(ctx, request);
 					break;
 				case successDissolveRoom://服务端主动推送的消息
 					break;

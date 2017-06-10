@@ -37,6 +37,8 @@ public class PlayerInfo {
 	private Integer loseTimes;
 	/**1 同意解散 2不同意解散*/
 	private Integer dissolveStatus;
+	/**房卡数*/
+	private Integer roomCardNum;
 	
 	public Long getPlayerId() {
 		return playerId;
@@ -133,6 +135,12 @@ public class PlayerInfo {
 	}
 	public void setDissolveStatus(Integer dissolveStatus) {
 		this.dissolveStatus = dissolveStatus;
+	}
+	public Integer getRoomCardNum() {
+		return roomCardNum;
+	}
+	public void setRoomCardNum(Integer roomCardNum) {
+		this.roomCardNum = roomCardNum;
 	}
 	
 }

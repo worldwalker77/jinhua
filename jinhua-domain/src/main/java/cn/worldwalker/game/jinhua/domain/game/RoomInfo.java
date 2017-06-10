@@ -28,6 +28,8 @@ public class RoomInfo implements Serializable{
 	private Integer totalGames;
 	/**当前局数*/
 	private Integer curGame;
+	/**底注*/
+	private Integer stakeButtom;
 	/**押注上限*/
 	private Integer stakeLimit = 10;
 	/**押注次数上限*/
@@ -157,6 +159,12 @@ public class RoomInfo implements Serializable{
 	}
 	public void setPrePlayerStakeScore(Integer prePlayerStakeScore) {
 		this.prePlayerStakeScore = prePlayerStakeScore;
+	}
+	public Integer getStakeButtom() {
+		return stakeButtom;
+	}
+	public void setStakeButtom(Integer stakeButtom) {
+		this.stakeButtom = stakeButtom;
 	}
 	
 }

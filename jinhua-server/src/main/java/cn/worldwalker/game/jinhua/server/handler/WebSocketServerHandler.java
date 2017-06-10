@@ -135,7 +135,14 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	          if(frame instanceof TextWebSocketFrame){
 	        	  System.out.println("文本==============");
 		          String jsonStr = ((TextWebSocketFrame) frame).text();
-		          GameRequest request = JsonUtil.toObject(jsonStr, GameRequest.class);
+		          GameRequest request = null;
+				try {
+					request = JsonUtil.toObject(jsonStr, GameRequest.class);
+				} catch (Exception e) {
+					logger.error("参数json解析异常", e);
+					SessionContainer.sendErrorMsg(ctx, "参数json解析异常", 0, new GameRequest());
+					return;
+				}
 		          msgProcessDispatcher.requestDispatcher(ctx, request);
 	          }
 	          

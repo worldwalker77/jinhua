@@ -19,4 +19,8 @@ public class RoomLockContainer {
 	public static void setLockByRoomId(Long roomId, Lock lock){
 		lockMap.put(roomId, lock);
 	}
+	
+	public static void delLockByRoomId(Long roomId){
+		lockMap.remove(roomId);
+	}
 }
