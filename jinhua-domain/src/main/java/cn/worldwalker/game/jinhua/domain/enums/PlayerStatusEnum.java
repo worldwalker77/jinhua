@@ -7,7 +7,8 @@ public enum PlayerStatusEnum {
 	notWatch(3, "未看牌"),
 	watch(4, "已看牌"),
 	autoDiscard(5, "主动弃牌"),
-	compareDisCard(6, "比牌被动弃牌");
+	compareDisCard(6, "比牌被动弃牌"),
+	showCard(7, "明牌");
 	
 	public Integer status;
 	public String desc;

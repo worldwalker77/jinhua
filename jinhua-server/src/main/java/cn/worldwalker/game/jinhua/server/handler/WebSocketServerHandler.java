@@ -178,6 +178,7 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	             throws Exception {
 	         cause.printStackTrace();
-	         ctx.close();
+	         SessionContainer.sendErrorMsg(ctx, "系统异常", 0, new GameRequest());
+//	         ctx.close();
 	     }
 }

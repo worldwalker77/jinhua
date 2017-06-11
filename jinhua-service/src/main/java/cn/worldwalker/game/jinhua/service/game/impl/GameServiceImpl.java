@@ -372,15 +372,15 @@ public class GameServiceImpl implements GameService {
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 			for(PlayerInfo player : playerList){
+				PlayerInfo newPlayer = new PlayerInfo();
+				newPlayer.setPlayerId(player.getPlayerId());
+				newPlayer.setCurScore(player.getCurScore());
+				newPlayer.setStatus(player.getStatus());
 				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
-					PlayerInfo newPlayer = new PlayerInfo();
-					newPlayer.setPlayerId(player.getPlayerId());
-					newPlayer.setCurScore(player.getCurScore());
-					newPlayer.setStatus(player.getStatus());
 					newPlayer.setCardType(player.getCardType());
 					newPlayer.setCardList(player.getCardList());
-					newRoomInfo.getPlayerList().add(newPlayer);
 				}
+				newRoomInfo.getPlayerList().add(newPlayer);
 			}
 			result.setMsgType(MsgTypeEnum.autoCardsCompare.msgType);
 			result.setData(newRoomInfo);
@@ -432,7 +432,7 @@ public class GameServiceImpl implements GameService {
 		result.setMsgType(MsgTypeEnum.watchCards.msgType);
 		data.put("playerId", msg.getPlayerId());
 		long msgId = SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), result);
-		data.put("cards", cardList);
+		data.put("cardList", cardList);
 		result.setMsgId(msgId);
 		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
 		return result;
@@ -484,15 +484,15 @@ public class GameServiceImpl implements GameService {
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 			for(PlayerInfo player : playerList){
+				PlayerInfo newPlayer = new PlayerInfo();
+				newPlayer.setPlayerId(player.getPlayerId());
+				newPlayer.setCurScore(player.getCurScore());
+				newPlayer.setStatus(player.getStatus());
 				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
-					PlayerInfo newPlayer = new PlayerInfo();
-					newPlayer.setPlayerId(player.getPlayerId());
-					newPlayer.setCurScore(player.getCurScore());
-					newPlayer.setStatus(player.getStatus());
 					newPlayer.setCardType(player.getCardType());
 					newPlayer.setCardList(player.getCardList());
-					newRoomInfo.getPlayerList().add(newPlayer);
 				}
+				newRoomInfo.getPlayerList().add(newPlayer);
 			}
 			result.setMsgType(MsgTypeEnum.autoCardsCompare.msgType);
 			result.setData(newRoomInfo);
@@ -559,17 +559,17 @@ public class GameServiceImpl implements GameService {
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 			newRoomInfo.setRoomBankerId(roomInfo.getRoomBankerId());
 			for(PlayerInfo player : playerList){
+				PlayerInfo newPlayer = new PlayerInfo();
+				newPlayer.setPlayerId(player.getPlayerId());
+				newPlayer.setCurScore(player.getCurScore());
+				newPlayer.setStatus(player.getStatus());
 				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
-					PlayerInfo newPlayer = new PlayerInfo();
-					newPlayer.setPlayerId(player.getPlayerId());
-					newPlayer.setCurScore(player.getCurScore());
-					newPlayer.setStatus(player.getStatus());
 					newPlayer.setCardType(player.getCardType());
 					newPlayer.setCardList(player.getCardList());
-					newRoomInfo.getPlayerList().add(newPlayer);
 				}
+				newRoomInfo.getPlayerList().add(newPlayer);
 			}
-			result.setMsgType(MsgTypeEnum.discardCards.msgType);
+			result.setMsgType(MsgTypeEnum.autoCardsCompare.msgType);
 			result.setData(newRoomInfo);
 			SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 			return result;

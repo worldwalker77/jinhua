@@ -42,7 +42,6 @@ public class RoomInfo implements Serializable{
 	private Date createTime;
 	/**当前房间状态*/
 	private Integer status;
-	
 	/**前一个说话玩家的id*/
 	private Long prePlayerId;
 	/**前一个说话玩家跟注时的状态,是看牌还是未看牌，主要是为了校验当前玩家的跟注是否符合要求*/
