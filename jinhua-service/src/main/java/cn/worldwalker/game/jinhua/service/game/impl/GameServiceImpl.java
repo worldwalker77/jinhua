@@ -459,6 +459,49 @@ public class GameServiceImpl implements GameService {
 			return result;
 		}
 		
+		Integer curStakeScore = null;
+		Integer prePlayerStatus = roomInfo.getPrePlayerStatus();
+		Integer prePlayerStakeScore = roomInfo.getPrePlayerStakeScore();
+		if (prePlayerStakeScore != null) {
+			/**前一个玩家未看牌*/
+			if (PlayerStatusEnum.notWatch.status.equals(prePlayerStatus)) {
+				/**当前玩家未看牌*/
+				if (PlayerStatusEnum.notWatch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))) {
+					/**当前玩家自动投注分数为前一个玩家的一半*/
+					if (null != prePlayerStakeScore) {
+						curStakeScore = prePlayerStakeScore;
+					}
+					/**当前玩家已看牌*/
+				}else if (PlayerStatusEnum.watch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))){
+					/**当前玩家自动投注分数为前一个玩家的一半*/
+					if (null != prePlayerStakeScore) {
+						curStakeScore = 2*prePlayerStakeScore;
+					}
+				}else{
+					return SessionContainer.sendErrorMsg(ctx, "当前玩家状态错误，必须是未看牌或者已看牌", MsgTypeEnum.stake.msgType, request);
+				}
+				/**前一个玩家已看牌*/
+			}else{
+				/**当前玩家未看牌*/
+				if (PlayerStatusEnum.notWatch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))) {
+					/**当前玩家自动投注分数为前一个玩家的一半*/
+					if (null != prePlayerStakeScore) {
+						curStakeScore = prePlayerStakeScore/2;
+					}
+					/**当前玩家已看牌*/
+				}else if (PlayerStatusEnum.watch.status.equals(getPlayerStatus(playerList, msg.getPlayerId()))){
+					/**当前玩家自动投注分数为前一个玩家的一半*/
+					if (null != prePlayerStakeScore) {
+						curStakeScore = prePlayerStakeScore;
+					}
+				}else{
+					return SessionContainer.sendErrorMsg(ctx, "当前玩家状态错误，必须是未看牌或者已看牌", MsgTypeEnum.stake.msgType, request);
+				}
+			}
+		}else{/**前一个玩家没有投注分，则说明此玩家是第一个说话的，直接设置1分*/
+			curStakeScore = 1;
+		}
+		
 		PlayerInfo selfPlayer = null;
 		PlayerInfo otherPlayer = null;
 		int alivePlayerCount = 0;
@@ -466,9 +509,9 @@ public class GameServiceImpl implements GameService {
 			if (player.getPlayerId().equals(msg.getPlayerId())) {
 				selfPlayer = player;
 				/**设置当前跟注分数*/
-				player.setCurStakeScore(msg.getCurStakeScore());
+				player.setCurStakeScore(curStakeScore);
 				/**设置当前总跟注分数*/
-				player.setCurTotalStakeScore((player.getCurTotalStakeScore()==null?0:player.getCurTotalStakeScore()) + msg.getCurStakeScore());
+				player.setCurTotalStakeScore((player.getCurTotalStakeScore()==null?0:player.getCurTotalStakeScore()) + curStakeScore);
 			}else if(player.getPlayerId().equals(msg.getOtherPlayerId())){
 				otherPlayer = player;
 			}
