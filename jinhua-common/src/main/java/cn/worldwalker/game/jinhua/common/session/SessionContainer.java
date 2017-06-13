@@ -4,13 +4,13 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +21,7 @@ import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
+import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 
 @Component
@@ -122,8 +123,38 @@ public class SessionContainer {
 	}
 	
 	public static void removeSession(ChannelHandlerContext ctx){
-		Collection<Channel> col =  sessionMap.values();
-		col.remove(ctx.channel());
+		if (sessionMap.isEmpty()) {
+			return;
+		}
+		Long playerId = null;
+		Set<Entry<Long, Channel>> entrySet = sessionMap.entrySet();
+		for(Entry<Long, Channel> entry : entrySet){
+			if (entry.getValue().equals(ctx.channel())) {
+				playerId = entry.getKey();
+				break;
+			}
+		}
+		sessionMap.remove(playerId);
+		System.out.println(playerId);
+		
+//		Collection<Channel> col =  sessionMap.values();
+//		col.remove(ctx.channel());
+	}
+	
+	public static void setUserInfoToRedis(String token, UserInfo userInfo){
+		jedisTemplate.setex(token, JsonUtil.toJson(userInfo), 3600*2);
+	}
+	
+	public static UserInfo getUserInfoFromRedis(String token){
+		String temp = jedisTemplate.get(token);
+		if (StringUtils.isNotBlank(temp)) {
+			return JsonUtil.toObject(temp, UserInfo.class);
+		}
+		return null;
+	}
+	
+	public static void expireUserInfo(String token){
+		jedisTemplate.expire(token, 3600*2);
 	}
 
 	public static Map<Long, Channel> getSessionMap() {

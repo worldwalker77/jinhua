@@ -33,7 +33,7 @@ import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
-import cn.worldwalker.game.jinhua.server.dispatcher.MsgProcessDispatcher;
+import cn.worldwalker.game.jinhua.server.dispatcher.TextMsgProcessDispatcher;
 @Sharable
 @Service
 public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>{
@@ -47,7 +47,7 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	      private WebSocketServerHandshaker handshaker;
 	      
 	      @Autowired
-	      private MsgProcessDispatcher msgProcessDispatcher;
+	      private TextMsgProcessDispatcher textMsgProcessDispatcher;
 	      
 	      @Autowired
 	  	  private JedisTemplate jedisTemplate;
@@ -134,16 +134,7 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	          //本程序仅支持文本消息， 不支持二进制消息
 	          if(frame instanceof TextWebSocketFrame){
 	        	  System.out.println("文本==============");
-		          String jsonStr = ((TextWebSocketFrame) frame).text();
-		          GameRequest request = null;
-				try {
-					request = JsonUtil.toObject(jsonStr, GameRequest.class);
-				} catch (Exception e) {
-					logger.error("参数json解析异常", e);
-					SessionContainer.sendErrorMsg(ctx, "参数json解析异常", 0, new GameRequest());
-					return;
-				}
-		          msgProcessDispatcher.requestDispatcher(ctx, request);
+		          textMsgProcessDispatcher.textMsgProcess(ctx, ((TextWebSocketFrame) frame).text());
 	          }
 	          
 	     }

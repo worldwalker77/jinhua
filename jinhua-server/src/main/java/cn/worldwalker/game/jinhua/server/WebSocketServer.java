@@ -17,7 +17,7 @@ import cn.worldwalker.game.jinhua.server.initializer.WebSocketServerInitializer;
 public class WebSocketServer implements Server{
 	private Logger logger = Logger.getLogger(WebSocketServer.class);
 
-    private int port = 3389;
+    private int port = 9000;
     @Autowired
     private WebSocketServerInitializer serverInitializer;
 

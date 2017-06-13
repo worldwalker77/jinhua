@@ -25,6 +25,7 @@ import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
+import cn.worldwalker.game.jinhua.common.utils.MD5Util;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.enums.DissolveStatusEnum;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
@@ -36,6 +37,7 @@ import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
 import cn.worldwalker.game.jinhua.domain.game.PlayerInfo;
 import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
+import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 import cn.worldwalker.game.jinhua.service.game.GameService;
 
@@ -51,19 +53,29 @@ public class GameServiceImpl implements GameService {
 	@Override
 	public Result login(String token, String deviceType) {
 		Result result = new Result();
-		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("headImgUrl", "http://img.zcool.cn/community/01e282574bc0126ac72525ae39ce5f.jpg");
+		UserInfo userInfo = new UserInfo();
 		long playerId = genPlayerId();
-		data.put("nickName", "NickName_" + playerId);
-		data.put("playerId", playerId);
-		data.put("level", 1);
-		data.put("token", "");
-		data.put("serverIp", "119.23.57.236");
-		data.put("port", "3389");
-		result.setData(data);
+		userInfo.setPlayerId(playerId);
+		userInfo.setNickName("NickName_" + playerId);
+		userInfo.setLevel(1);
+		userInfo.setServerIp("119.23.57.236");
+		userInfo.setPort("3389");
+		String loginToken = genToken(playerId);
+		SessionContainer.setUserInfoToRedis(loginToken, userInfo);
+		userInfo.setHeadImgUrl("http://img.zcool.cn/community/01e282574bc0126ac72525ae39ce5f.jpg");
+		userInfo.setToken(loginToken);
+		result.setData(userInfo);
 		return result;
 	}
-
+	/**
+	 * 登录后token生成，当前时间+
+	 * @return
+	 */
+	private String genToken(Long playerId){
+		String temp = playerId + System.currentTimeMillis() + Thread.currentThread().getName();
+		return MD5Util.encryptByMD5(temp);
+	}
+	
 	@Override
 	public Result getIpByRoomId(String token, Long roomId) {
 		Result result = new Result();
@@ -124,6 +136,13 @@ public class GameServiceImpl implements GameService {
 				return SessionContainer.sendErrorMsg(ctx, "系统异常,请稍后再试！", MsgTypeEnum.createRoom.msgType, request);
 			}
 		}
+		/**将roomId设置进用户信息中，后面会使用到*/
+		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
+		userInfo.setRoomId(roomId);
+		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
+		
+		
+		
 		RoomInfo roomInfo = new RoomInfo();
 		roomInfo.setRoomId(roomId);
 		roomInfo.setRoomOwnerId(msg.getPlayerId());

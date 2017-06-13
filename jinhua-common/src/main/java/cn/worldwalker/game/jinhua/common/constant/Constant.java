@@ -3,6 +3,8 @@ package cn.worldwalker.game.jinhua.common.constant;
 public class Constant {
 	public final static String jinhuaRoomMap = "jinhua_room_map";
 	
+	public final static String jinhuaPlayerIdRoomMap = "jinhua_player_id_room_map";
+	
 	public final static String jinhuaIpConnectCountMap = "jinhua_ip_connect_count_map";
 	
 	public final static String jinhuaRoomMsgIdMap = "jinhua_room_msg_id_map";

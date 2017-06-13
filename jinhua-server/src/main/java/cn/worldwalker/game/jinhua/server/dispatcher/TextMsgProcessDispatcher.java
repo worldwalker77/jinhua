@@ -18,27 +18,17 @@ import cn.worldwalker.game.jinhua.domain.game.Msg;
 import cn.worldwalker.game.jinhua.service.game.GameService;
 
 @Service
-public class MsgProcessDispatcher {
+public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 	
-	private static final Log log = LogFactory.getLog(MsgProcessDispatcher.class);
+	private static final Log log = LogFactory.getLog(TextMsgProcessDispatcher.class);
 	
 	@Autowired
 	private GameService gameService;
 	
+	@Override
 	public void requestDispatcher(ChannelHandlerContext ctx, GameRequest request){
 		
-		/**参数校验*/
-		if (null == request || null == request.getMsg() || request.getMsgType() == null) {
-			SessionContainer.sendErrorMsg(ctx, "参数不能为空", request.getMsgType(), request);
-			return;
-		}
-		/**非进入大厅请求，则需要校验gameType*/
-		if (!MsgTypeEnum.entryHall.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
-			if (request.getGameType() == null) {
-				SessionContainer.sendErrorMsg(ctx, "参数不能为空", request.getMsgType(), request);
-				return;
-			}
-		}
+		
 		Msg msg = request.getMsg();
 		Integer msgType = request.getMsgType();
 		MsgTypeEnum msgTypeEnum= MsgTypeEnum.getMsgTypeEnumByType(msgType);
@@ -99,7 +89,7 @@ public class MsgProcessDispatcher {
 					gameService.watchCards(ctx, request);
 					break;
 				case manualCardsCompare:
-					if (msg.getPlayerId() == null || msg.getOtherPlayerId() == null || msg.getCurStakeScore() == null || msg.getRoomId() == null) {
+					if (msg.getPlayerId() == null || msg.getOtherPlayerId() == null || msg.getRoomId() == null) {
 						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
 						return;
 					}
