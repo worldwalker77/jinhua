@@ -82,7 +82,7 @@ public class GameServiceImpl implements GameService {
 		Map<String, Object> data = new HashMap<String, Object>();
 		
 		/**根据房间号从redis获取对应的服务器ip*/
-		String roomInfo = jedisTemplate.hget(Constant.jinhuaRoomMap, String.valueOf(roomId));
+		String roomInfo = jedisTemplate.hget(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
 		if (StringUtils.isBlank(roomInfo)) {
 			result.setCode(1);
 			result.setDesc("房号" + roomId + "不存在");
@@ -113,13 +113,12 @@ public class GameServiceImpl implements GameService {
 	public Result createRoom(ChannelHandlerContext ctx, GameRequest request) {
 		Result result = null;
 		Msg msg = request.getMsg();
-		/**TODO 房号如何生成，后续待优化*/
 		Long roomId = genRoomId();
 		int i = 0;
 		while(i < 3){
 			boolean exist = true;
 			try {
-				exist = jedisTemplate.hexists(Constant.jinhuaRoomMap, String.valueOf(roomId));
+				exist = jedisTemplate.hexists(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
 			} catch (Exception e) {
 				log.error("校验房号在redis中是否存在异常！, request : " + JsonUtil.toJson(request), e);
 				return SessionContainer.sendErrorMsg(ctx, "系统异常", MsgTypeEnum.createRoom.msgType, request);
@@ -136,26 +135,18 @@ public class GameServiceImpl implements GameService {
 				return SessionContainer.sendErrorMsg(ctx, "系统异常,请稍后再试！", MsgTypeEnum.createRoom.msgType, request);
 			}
 		}
-		/**将roomId设置进用户信息中，后面会使用到*/
-		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
-		userInfo.setRoomId(roomId);
-		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
-		
-		
-		
+		/**组装房间对象*/
 		RoomInfo roomInfo = new RoomInfo();
 		roomInfo.setRoomId(roomId);
 		roomInfo.setRoomOwnerId(msg.getPlayerId());
 		roomInfo.setRoomBankerId(msg.getPlayerId());
 		roomInfo.setPayType(msg.getPayType());
 		roomInfo.setTotalGames(msg.getTotalGames());
-		/**创建房间的时候设置当前为第0局*/
 		roomInfo.setCurGame(0);
 		roomInfo.setStakeButtom(Constant.stakeButtom);
 		roomInfo.setStakeLimit(Constant.stakeLimit);
 		roomInfo.setStakeTimesLimit(Constant.stakeTimesLimit);
-		/**设置当前房间状态为游戏中*/
-		roomInfo.setStatus(RoomStatusEnum.inGame.status);
+		roomInfo.setStatus(RoomStatusEnum.justBegin.status);
 		roomInfo.setServerIp(IPUtil.getLocalIp());
 		roomInfo.setCreateTime(new Date());
 		List<PlayerInfo> playerList = new ArrayList<PlayerInfo>();
@@ -169,8 +160,15 @@ public class GameServiceImpl implements GameService {
 		playerInfo.setRoomCardNum(10);
 		playerList.add(playerInfo);
 		roomInfo.setPlayerList(playerList);
+		
+		/**将roomId设置进用户信息中，后面会使用到*/
+		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
+		userInfo.setRoomId(roomId);
+		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
 		/**将当前房间的信息设置到redis中*/
 		setRoomInfoToRedis(roomId, roomInfo);
+		/**设置playerId与roomId的映射关系*/
+		jedisTemplate.hset(Constant.jinhuaPlayerIdRoomIdMap, String.valueOf(msg.getPlayerId()), String.valueOf(roomId));
 		
 		/**设置返回信息*/
 		result = new Result();
@@ -195,11 +193,14 @@ public class GameServiceImpl implements GameService {
 			return result;
 		}
 		/**房间如果不存在*/
-		if (!jedisTemplate.hexists(Constant.jinhuaRoomMap, String.valueOf(roomId))) {
+		if (!jedisTemplate.hexists(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId))) {
 			return SessionContainer.sendErrorMsg(ctx, "房号不存在", MsgTypeEnum.entryRoom.msgType, request);
 		}
-		String roomInfoStr = jedisTemplate.hget(Constant.jinhuaRoomMap, String.valueOf(roomId));
-		RoomInfo roomInfo = JsonUtil.toObject(roomInfoStr, RoomInfo.class);
+		RoomInfo roomInfo = getRoomInfoFromRedis(roomId);
+		/**如果不是刚开始游戏准备阶段，则不允许加入房间*/
+		if (!RoomStatusEnum.justBegin.status.equals(roomInfo.getStatus())) {
+			return SessionContainer.sendErrorMsg(ctx, "此房间正在游戏中，不允许加入", MsgTypeEnum.entryRoom.msgType, request);
+		}
 		/**需要发送消息的玩家id 列表*/
 		Set<Long> playerIdSet = new HashSet<Long>();
 		playerIdSet.add(msg.getPlayerId());
@@ -222,7 +223,9 @@ public class GameServiceImpl implements GameService {
 		playerInfo.setRoomCardNum(10);
 		playerList.add(playerInfo);
 		/**将当前加入的玩家信息加入房间，并设置进缓存*/
-		jedisTemplate.hset(Constant.jinhuaRoomMap, String.valueOf(roomId), JsonUtil.toJson(roomInfo));
+		setRoomInfoToRedis(roomId, roomInfo);
+		/**设置playerId与roomId的映射关系*/
+		jedisTemplate.hset(Constant.jinhuaPlayerIdRoomIdMap, String.valueOf(msg.getPlayerId()), String.valueOf(roomId));
 		result = new Result();
 		result.setMsgType(request.getMsgType());
 		request.setGameType(1);
@@ -706,7 +709,7 @@ public class GameServiceImpl implements GameService {
 			data.put("roomId", roomId);
 			SessionContainer.sendTextMsgByPlayerId(roomId, msg.getPlayerId(), result);
 			/**解散房间*/
-			doDissolveRoom(roomId);
+			doDissolveRoom(roomId, getPlayerIds(playerList));
 			return result;
 		}
 		result.setMsgType(MsgTypeEnum.dissolveRoom.msgType);
@@ -744,7 +747,7 @@ public class GameServiceImpl implements GameService {
 			result.setMsgType(MsgTypeEnum.successDissolveRoom.msgType);
 			SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 			/**解散房间*/
-			doDissolveRoom(roomId);
+			doDissolveRoom(roomId, getPlayerIds(playerList));
 			return result;
 		}
 		result.setMsgType(MsgTypeEnum.agreeDissolveRoom.msgType);
@@ -754,11 +757,13 @@ public class GameServiceImpl implements GameService {
 		return result;
 	}
 	/**
-	 * 解散1 删除redis房间信息 2 删除房间消息redis计数器  3 删除锁
+	 * 解散1 删除redis房间信息 2 删除房间消息redis消息id计数器 3 删除playerId与roomId的映射关系  4 删除离线playerId与时间的映射关系  5 删除锁
 	 */
-	private void doDissolveRoom(Long roomId){
-		jedisTemplate.hdel(Constant.jinhuaRoomMap, String.valueOf(roomId));
-		jedisTemplate.hdel(Constant.jinhuaRoomMsgIdMap, String.valueOf(roomId));
+	private void doDissolveRoom(Long roomId, String[] players){
+		jedisTemplate.hdel(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
+		jedisTemplate.hdel(Constant.jinhuaRoomIdMsgIdMap, String.valueOf(roomId));
+		jedisTemplate.hdel(Constant.jinhuaPlayerIdRoomIdMap, players);
+		jedisTemplate.hdel(Constant.jinhuaOfflinePlayerIdTimeMap, players);
 		RoomLockContainer.delLockByRoomId(roomId);
 	}
 
@@ -786,6 +791,13 @@ public class GameServiceImpl implements GameService {
 		SessionContainer.sendTextMsgByPlayerIdSet(roomId, getPlayerIdSet(playerList), result);
 		return result;
 	}
+	
+	@Override
+	public Result refreshRoomInfo(ChannelHandlerContext ctx, GameRequest request) {
+		
+		return null;
+	}
+	
 	/**
 	 * 设置玩家状态
 	 * @param playerList
@@ -853,6 +865,15 @@ public class GameServiceImpl implements GameService {
 		return set;
 	}
 	
+	private String[] getPlayerIds(List<PlayerInfo> playerList){
+		int size = playerList.size();
+		String[] players = new String[size];
+		for(int i = 0; i < size; i++){
+			players[i] = String.valueOf(playerList.get(i).getPlayerId());
+		}
+		return players;
+	}
+	
 	private Set<Long> getPlayerIdSetWithoutSelf(List<PlayerInfo> playerList, Long playerId){
 		Set<Long> set = new HashSet<Long>();
 		for(PlayerInfo player : playerList){
@@ -864,7 +885,7 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	private RoomInfo getRoomInfoFromRedis(Long roomId){
-		String roomInfoStr = jedisTemplate.hget(Constant.jinhuaRoomMap, String.valueOf(roomId));
+		String roomInfoStr = jedisTemplate.hget(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
 		if (StringUtils.isBlank(roomInfoStr)) {
 			return null;
 		}
@@ -872,7 +893,7 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	private void setRoomInfoToRedis(Long roomId, RoomInfo roomInfo){
-		jedisTemplate.hset(Constant.jinhuaRoomMap, String.valueOf(roomId),JsonUtil.toJson(roomInfo));
+		jedisTemplate.hset(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId),JsonUtil.toJson(roomInfo));
 	}
 	/**
 	 * 计算各玩家得分及赢家
@@ -965,6 +986,5 @@ public class GameServiceImpl implements GameService {
 		}
 		return false;
 	}
-
 	
 }

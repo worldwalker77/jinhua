@@ -34,7 +34,9 @@ public class SessionContainer {
 	private static Map<Long, Channel> sessionMap = new ConcurrentHashMap<Long, Channel>();
 	
 	public static void addChannel(ChannelHandlerContext ctx, Long playerId){
-		sessionMap.put(playerId, ctx.channel());
+		if (!sessionMap.containsKey(playerId)) {
+			sessionMap.put(playerId, ctx.channel());
+		}
 	}
 	
 	public static Channel getChannel(Long playerId){
@@ -73,7 +75,7 @@ public class SessionContainer {
 		Channel channel = getChannel(playerId);
 		if (null != channel) {
 			/**从redis通过自增获取当前房间的msgId，这里不做异常捕获，交给MsgProcessDispatcher层进行统一捕获，*/
-			msgId = jedisTemplate.hincrBy(Constant.jinhuaRoomMsgIdMap, String.valueOf(roomId), 1);
+			msgId = jedisTemplate.hincrBy(Constant.jinhuaRoomIdMsgIdMap, String.valueOf(roomId), 1);
 			result.setMsgId(msgId);
 			try {
 				channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
@@ -88,7 +90,7 @@ public class SessionContainer {
 	
 	public static long sendTextMsgByPlayerIdSet(Long roomId, Set<Long> playerIdSet, Result result){
 		/**从redis通过自增获取当前房间的msgId，这里不做异常捕获，交给MsgProcessDispatcher层进行统一捕获，*/
-		long msgId = jedisTemplate.hincrBy(Constant.jinhuaRoomMsgIdMap, String.valueOf(roomId), 1);
+		long msgId = jedisTemplate.hincrBy(Constant.jinhuaRoomIdMsgIdMap, String.valueOf(roomId), 1);
 		result.setMsgId(msgId);
 		for(Long playerId : playerIdSet){
 			Channel channel = getChannel(playerId);
@@ -135,7 +137,8 @@ public class SessionContainer {
 			}
 		}
 		sessionMap.remove(playerId);
-		System.out.println(playerId);
+		/**设置离线playerId与roomId的映射关系*/
+		jedisTemplate.hset(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(playerId), String.valueOf(System.currentTimeMillis()));
 		
 //		Collection<Channel> col =  sessionMap.values();
 //		col.remove(ctx.channel());

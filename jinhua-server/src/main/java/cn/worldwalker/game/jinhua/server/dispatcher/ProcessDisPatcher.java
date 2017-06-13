@@ -37,7 +37,7 @@ public abstract class ProcessDisPatcher {
 		String token = request.getToken();
 		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(token);
 		if (userInfo == null) {
-			SessionContainer.sendErrorMsg(ctx, "需要重新登录", MsgTypeEnum.needLogin.msgType, request);
+			SessionContainer.sendErrorMsg(ctx, "需要重新登录", request.getMsgType(), request);
 			return;
 		}
 		SessionContainer.expireUserInfo(token);
