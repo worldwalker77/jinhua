@@ -34,13 +34,13 @@ public abstract class ProcessDisPatcher {
 		/**
 		 * token登录检验
 		 */
-		String token = request.getToken();
-		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(token);
-		if (userInfo == null) {
-			SessionContainer.sendErrorMsg(ctx, "需要重新登录", request.getMsgType(), request);
-			return;
-		}
-		SessionContainer.expireUserInfo(token);
+//		String token = request.getToken();
+//		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(token);
+//		if (userInfo == null) {
+//			SessionContainer.sendErrorMsg(ctx, "需要重新登录", request.getMsgType(), request);
+//			return;
+//		}
+//		SessionContainer.expireUserInfo(token);
 		
 		/**非进入大厅请求，则需要校验gameType*/
 		if (!MsgTypeEnum.entryHall.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
@@ -49,13 +49,13 @@ public abstract class ProcessDisPatcher {
 				return;
 			}
 		}
-		Msg msg = request.getMsg();
-		if (msg == null) {
-			msg = new Msg();
-			request.setMsg(msg);
-		}
-		msg.setPlayerId(userInfo.getPlayerId());
-		msg.setRoomId(userInfo.getRoomId());
+//		Msg msg = request.getMsg();
+//		if (msg == null) {
+//			msg = new Msg();
+//			request.setMsg(msg);
+//		}
+//		msg.setPlayerId(userInfo.getPlayerId());
+//		msg.setRoomId(userInfo.getRoomId());
 		requestDispatcher(ctx, request);
 	}
 	

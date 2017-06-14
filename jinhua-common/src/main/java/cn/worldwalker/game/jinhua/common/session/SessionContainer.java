@@ -136,10 +136,11 @@ public class SessionContainer {
 				break;
 			}
 		}
-		sessionMap.remove(playerId);
-		/**设置离线playerId与roomId的映射关系*/
-		jedisTemplate.hset(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(playerId), String.valueOf(System.currentTimeMillis()));
-		
+		if (playerId != null) {
+			sessionMap.remove(playerId);
+			/**设置离线playerId与roomId的映射关系*/
+			jedisTemplate.hset(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(playerId), String.valueOf(System.currentTimeMillis()));
+		}
 //		Collection<Channel> col =  sessionMap.values();
 //		col.remove(ctx.channel());
 	}

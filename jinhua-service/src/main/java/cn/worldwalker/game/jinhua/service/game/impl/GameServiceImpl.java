@@ -162,9 +162,9 @@ public class GameServiceImpl implements GameService {
 		roomInfo.setPlayerList(playerList);
 		
 		/**将roomId设置进用户信息中，后面会使用到*/
-		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
-		userInfo.setRoomId(roomId);
-		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
+//		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
+//		userInfo.setRoomId(roomId);
+//		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
 		/**将当前房间的信息设置到redis中*/
 		setRoomInfoToRedis(roomId, roomInfo);
 		/**设置playerId与roomId的映射关系*/
@@ -393,10 +393,13 @@ public class GameServiceImpl implements GameService {
 			/**此处new一个新对象，是返回给客户端需要返回的数据，不需要返回的数据则隐藏掉*/
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
+			newRoomInfo.setTotalWinnerId(roomInfo.getTotalWinnerId());
+			newRoomInfo.setStatus(roomInfo.getStatus());
 			for(PlayerInfo player : playerList){
 				PlayerInfo newPlayer = new PlayerInfo();
 				newPlayer.setPlayerId(player.getPlayerId());
 				newPlayer.setCurScore(player.getCurScore());
+				newPlayer.setTotalScore(player.getTotalScore());
 				newPlayer.setStatus(player.getStatus());
 				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
 					newPlayer.setCardType(player.getCardType());
@@ -548,10 +551,13 @@ public class GameServiceImpl implements GameService {
 			/**此处new一个新对象，是返回给客户端需要返回的数据，不需要返回的数据则隐藏掉*/
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
+			newRoomInfo.setTotalWinnerId(roomInfo.getTotalWinnerId());
+			newRoomInfo.setStatus(roomInfo.getStatus());
 			for(PlayerInfo player : playerList){
 				PlayerInfo newPlayer = new PlayerInfo();
 				newPlayer.setPlayerId(player.getPlayerId());
 				newPlayer.setCurScore(player.getCurScore());
+				newPlayer.setTotalScore(player.getTotalScore());
 				newPlayer.setStatus(player.getStatus());
 				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
 					newPlayer.setCardType(player.getCardType());
@@ -623,10 +629,13 @@ public class GameServiceImpl implements GameService {
 			RoomInfo newRoomInfo = new RoomInfo();
 			newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 			newRoomInfo.setRoomBankerId(roomInfo.getRoomBankerId());
+			newRoomInfo.setTotalWinnerId(roomInfo.getTotalWinnerId());
+			newRoomInfo.setStatus(roomInfo.getStatus());
 			for(PlayerInfo player : playerList){
 				PlayerInfo newPlayer = new PlayerInfo();
 				newPlayer.setPlayerId(player.getPlayerId());
 				newPlayer.setCurScore(player.getCurScore());
+				newPlayer.setTotalScore(player.getTotalScore());
 				newPlayer.setStatus(player.getStatus());
 				if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
 					newPlayer.setCardType(player.getCardType());
