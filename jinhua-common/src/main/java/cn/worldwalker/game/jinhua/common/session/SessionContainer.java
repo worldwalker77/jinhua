@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -17,10 +18,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import cn.worldwalker.game.jinhua.common.constant.Constant;
+import cn.worldwalker.game.jinhua.common.player.GameCommonUtil;
+import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
+import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
+import cn.worldwalker.game.jinhua.domain.enums.OnlineStatusEnum;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
+import cn.worldwalker.game.jinhua.domain.game.PlayerInfo;
+import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
 import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 
@@ -56,19 +63,6 @@ public class SessionContainer {
 		}
 		return false;
 	}
-//	
-//	public static void sendTextMsgByPlayerIdSet(Set<Long> playerIdSet, Result result){
-//		for(Long playerId : playerIdSet){
-//			Channel channel = getChannel(playerId);
-//			if (null != channel) {
-//				try {
-//					channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
-//				} catch (Exception e) {
-//					log.error("sendTextMsgByPlayerIdList error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
-//				}
-//			}
-//		}
-//	}
 	
 	public static boolean sendTextMsgByPlayerId(Long roomId, Long playerId, Result result){
 		long msgId = 0;
@@ -138,12 +132,27 @@ public class SessionContainer {
 		}
 		if (playerId != null) {
 			sessionMap.remove(playerId);
-			/**设置离线playerId与roomId的映射关系*/
-			jedisTemplate.hset(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(playerId), String.valueOf(System.currentTimeMillis()));
+			String roomId = jedisTemplate.hget(Constant.jinhuaPlayerIdRoomIdMap, String.valueOf(playerId));
+			/**如果此掉线的playerId有房间信息*/
+			if (StringUtils.isNotBlank(roomId)) {
+				/**设置离线playerId与roomId的映射关系*/
+				jedisTemplate.hset(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(playerId), roomId +"_" + System.currentTimeMillis() );
+				/**设置当前玩家为离线状态并通知其他玩家此玩家离线*/
+				RoomInfo roomInfo = getRoomInfoFromRedis(Long.valueOf(roomId));
+				List<PlayerInfo> playerList = roomInfo.getPlayerList();
+				GameCommonUtil.setOnlineStatus(playerList, playerId, OnlineStatusEnum.offline);
+				setRoomInfoToRedis(Long.valueOf(roomId), roomInfo);
+				
+				Result result = new Result();
+				result.setMsgType(MsgTypeEnum.offlineNotice.msgType);
+				Map<String, Object> data = new HashMap<String, Object>();
+				data.put("playerId", playerId);
+				result.setData(data);
+				sendTextMsgByPlayerIdSet(Long.valueOf(roomId), GameCommonUtil.getPlayerIdSetWithoutSelf(playerList, playerId), result);
+			}
 		}
-//		Collection<Channel> col =  sessionMap.values();
-//		col.remove(ctx.channel());
 	}
+	
 	
 	public static void setUserInfoToRedis(String token, UserInfo userInfo){
 		jedisTemplate.setex(token, JsonUtil.toJson(userInfo), 3600*2);
@@ -164,6 +173,27 @@ public class SessionContainer {
 	public static Map<Long, Channel> getSessionMap() {
 		return sessionMap;
 	}
+	
+	public static void cleanPlayerAndRoomInfo(Long roomId, String[] playerIds){
+		jedisTemplate.hdel(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
+		jedisTemplate.hdel(Constant.jinhuaRoomIdMsgIdMap, String.valueOf(roomId));
+		jedisTemplate.hdel(Constant.jinhuaPlayerIdRoomIdMap, playerIds);
+		jedisTemplate.hdel(Constant.jinhuaOfflinePlayerIdTimeMap, playerIds);
+		RoomLockContainer.delLockByRoomId(roomId);
+	}
+	
+	public static RoomInfo getRoomInfoFromRedis(Long roomId){
+		String roomInfoStr = jedisTemplate.hget(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
+		if (StringUtils.isBlank(roomInfoStr)) {
+			return null;
+		}
+		return JsonUtil.toObject(roomInfoStr, RoomInfo.class);
+	}
+	
+	public static void setRoomInfoToRedis(Long roomId, RoomInfo roomInfo){
+		jedisTemplate.hset(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId),JsonUtil.toJson(roomInfo));
+	}
+
 	
 	 @Autowired(required = true)
 	public void setJedisTemplate(JedisTemplate jedisTemplate) {

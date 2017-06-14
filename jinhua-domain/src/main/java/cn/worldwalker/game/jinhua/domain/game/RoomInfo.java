@@ -40,6 +40,8 @@ public class RoomInfo implements Serializable{
 	private String serverIp;
 	/**房间的创建时间*/
 	private Date createTime;
+	/**房间的更新时间*/
+	private Date updateTime;
 	/**当前房间状态*/
 	private Integer status;
 	/**前一个说话玩家的id*/
@@ -164,6 +166,12 @@ public class RoomInfo implements Serializable{
 	}
 	public void setStakeButtom(Integer stakeButtom) {
 		this.stakeButtom = stakeButtom;
+	}
+	public Date getUpdateTime() {
+		return updateTime;
+	}
+	public void setUpdateTime(Date updateTime) {
+		this.updateTime = updateTime;
 	}
 	
 }
