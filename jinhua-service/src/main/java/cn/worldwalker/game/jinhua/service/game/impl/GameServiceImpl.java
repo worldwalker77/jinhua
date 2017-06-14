@@ -282,7 +282,7 @@ public class GameServiceImpl implements GameService {
 				player.setLoseTimes(0);
 			}
 			roomInfo.setCurPlayerId(roomInfo.getRoomBankerId());
-			
+			roomInfo.setStatus(RoomStatusEnum.inGame.status);
 			setRoomInfoToRedis(roomId, roomInfo);
 			/**发牌返回信息*/
 			result.setMsgType(MsgTypeEnum.dealCards.msgType);
@@ -935,7 +935,7 @@ public class GameServiceImpl implements GameService {
 		}else{/**如果当前局数等于总局数，则设置为一圈结束*/
 			roomInfo.setStatus(RoomStatusEnum.totalGameOver.status);
 		}
-		
+		System.out.println("当前房间状态：" + roomInfo.getStatus());
 	}
 	
 	private Long getNextOperatePlayerId(List<PlayerInfo> playerList, Long curPlayerId){
