@@ -19,7 +19,9 @@ public enum MsgTypeEnum {
 	disagreeDissolveRoom(15, "不同意解散房间"),
 	successDissolveRoom(16, "成功解散房间通知"),
 	refreshRoom(17, "刷新房间信息"),
-	offlineNotice(18, "通知玩家离线");
+	offlineNotice(18, "通知玩家离线"),
+	onlineNotice(19, "通知玩家上线"),
+	delRoomConfirmBeforeReturnHall(20, "客户端返回大厅时的通知消息");
 	
 	public int msgType;
 	public String desc;

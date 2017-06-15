@@ -39,6 +39,8 @@ public class PlayerInfo {
 	private Integer dissolveStatus;
 	/**房卡数*/
 	private Integer roomCardNum;
+	/**最大牌型*/
+	private Integer maxCardType;
 	
 	public Long getPlayerId() {
 		return playerId;
@@ -141,6 +143,12 @@ public class PlayerInfo {
 	}
 	public void setRoomCardNum(Integer roomCardNum) {
 		this.roomCardNum = roomCardNum;
+	}
+	public Integer getMaxCardType() {
+		return maxCardType;
+	}
+	public void setMaxCardType(Integer maxCardType) {
+		this.maxCardType = maxCardType;
 	}
 	
 }

@@ -55,7 +55,9 @@ public abstract class ProcessDisPatcher {
 			request.setMsg(msg);
 		}
 		msg.setPlayerId(userInfo.getPlayerId());
-		msg.setRoomId(userInfo.getRoomId());
+		if (msg.getRoomId() == null) {
+			msg.setRoomId(userInfo.getRoomId());
+		}
 		requestDispatcher(ctx, request);
 	}
 	

@@ -134,7 +134,16 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 					}
 					gameService.disagreeDissolveRoom(ctx, request);
 					break;
+					
 				case successDissolveRoom://服务端主动推送的消息
+					break;
+					
+				case delRoomConfirmBeforeReturnHall:
+					if (msg.getPlayerId() == null || msg.getRoomId() == null) {
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						return;
+					}
+					gameService.delRoomConfirmBeforeReturnHall(ctx, request);
 					break;
 					
 				default:

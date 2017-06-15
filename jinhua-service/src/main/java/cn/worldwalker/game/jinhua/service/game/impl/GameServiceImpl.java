@@ -27,6 +27,7 @@ import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.MD5Util;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
+import cn.worldwalker.game.jinhua.domain.enums.CardTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.DissolveStatusEnum;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
@@ -160,6 +161,9 @@ public class GameServiceImpl implements GameService {
 		playerInfo.setOrder(1);
 		playerInfo.setStatus(PlayerStatusEnum.notReady.status);
 		playerInfo.setRoomCardNum(10);
+		playerInfo.setWinTimes(0);
+		playerInfo.setLoseTimes(0);
+		playerInfo.setMaxCardType(CardTypeEnum.C235.cardType);
 		playerList.add(playerInfo);
 		roomInfo.setPlayerList(playerList);
 		
@@ -223,6 +227,9 @@ public class GameServiceImpl implements GameService {
 		playerInfo.setOrder(playerList.size() + 1);
 		playerInfo.setStatus(PlayerStatusEnum.notReady.status);
 		playerInfo.setRoomCardNum(10);
+		playerInfo.setWinTimes(0);
+		playerInfo.setLoseTimes(0);
+		playerInfo.setMaxCardType(CardTypeEnum.C235.cardType);
 		playerList.add(playerInfo);
 		roomInfo.setUpdateTime(new Date());
 		/**将当前加入的玩家信息加入房间，并设置进缓存*/
@@ -287,6 +294,8 @@ public class GameServiceImpl implements GameService {
 				player.setTotalScore(0);
 				player.setWinTimes(0);
 				player.setLoseTimes(0);
+				/**设置每个玩家的解散房间状态为不同意解散，后面大结算返回大厅的时候回根据此状态判断是否解散房间*/
+				player.setDissolveStatus(DissolveStatusEnum.disagree.status);
 			}
 			roomInfo.setCurPlayerId(roomInfo.getRoomBankerId());
 			roomInfo.setStatus(RoomStatusEnum.inGame.status);
@@ -605,6 +614,7 @@ public class GameServiceImpl implements GameService {
 		roomInfo.setCurPlayerId(curPlayerId);
 		roomInfo.setUpdateTime(new Date());
 		SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
+		result.setMsgType(MsgTypeEnum.manualCardsCompare.msgType);
 		SessionContainer.sendTextMsgByPlayerIdSet(roomId, GameCommonUtil.getPlayerIdSet(playerList), result);
 		return result;
 	}
@@ -821,9 +831,61 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	@Override
-	public Result refreshRoomInfo(ChannelHandlerContext ctx, GameRequest request) {
+	public Result refreshRoom(ChannelHandlerContext ctx, GameRequest request) {
+		Result result = new Result();
+		Map<String, Object> data = new HashMap<String, Object>();
+		result.setData(data);
 		
+		Msg msg = request.getMsg();
+		Long roomId = msg.getRoomId();
+		RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(roomId);
+		if (null == roomInfo) {
+			return SessionContainer.sendErrorMsg(ctx, "当前房间已解散或不存在", MsgTypeEnum.refreshRoom.msgType, request);
+		}
+		List<PlayerInfo> playerList = roomInfo.getPlayerList();
+		if (!GameCommonUtil.isExistPlayerInRoom(msg.getPlayerId(), playerList)) {
+			return SessionContainer.sendErrorMsg(ctx, "当前请求的玩家不在此房间中", MsgTypeEnum.refreshRoom.msgType, request);
+		}
 		return null;
+	}
+	
+	@Override
+	public Result delRoomConfirmBeforeReturnHall(ChannelHandlerContext ctx, GameRequest request) {
+		Result result = new Result();
+		Map<String, Object> data = new HashMap<String, Object>();
+		result.setData(data);
+		
+		Msg msg = request.getMsg();
+		Long roomId = msg.getRoomId();
+		RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(roomId);
+		if (null == roomInfo) {
+			return SessionContainer.sendErrorMsg(ctx, "当前房间已解散或不存在", MsgTypeEnum.delRoomConfirmBeforeReturnHall.msgType, request);
+		}
+		List<PlayerInfo> playerList = roomInfo.getPlayerList();
+		if (!GameCommonUtil.isExistPlayerInRoom(msg.getPlayerId(), playerList)) {
+			return SessionContainer.sendErrorMsg(ctx, "当前请求的玩家不在此房间中", MsgTypeEnum.delRoomConfirmBeforeReturnHall.msgType, request);
+		}
+		
+		int agreeDissolveCount = 0;
+		for(PlayerInfo player : playerList){
+			if (player.getPlayerId().equals(msg.getPlayerId())) {
+				player.setDissolveStatus(DissolveStatusEnum.agree.status);
+			}
+			if (player.getDissolveStatus().equals(DissolveStatusEnum.agree.status)) {
+				agreeDissolveCount++;
+			}
+		}
+		roomInfo.setUpdateTime(new Date());
+		SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
+		/**如果所有人都有确认消息，则解散房间*/
+		if (agreeDissolveCount >= playerList.size()) {
+			/**解散房间*/
+			doDissolveRoom(roomId, GameCommonUtil.getPlayerIds(playerList));
+		}
+		/**通知玩家返回大厅*/
+		result.setMsgType(MsgTypeEnum.delRoomConfirmBeforeReturnHall.msgType);
+		SessionContainer.sendTextMsgByPlayerId(roomId, msg.getPlayerId(), result);
+		return result;
 	}
 	
 	

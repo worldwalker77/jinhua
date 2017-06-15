@@ -38,6 +38,10 @@ public interface GameService {
 	
 	public Result disagreeDissolveRoom(ChannelHandlerContext ctx, GameRequest request);
 	
-	public Result refreshRoomInfo(ChannelHandlerContext ctx, GameRequest request);
+	public Result refreshRoom(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result delRoomConfirmBeforeReturnHall(ChannelHandlerContext ctx, GameRequest request);
+	
+	
 	
 }

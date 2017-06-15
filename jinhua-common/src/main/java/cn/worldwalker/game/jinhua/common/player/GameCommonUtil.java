@@ -131,6 +131,15 @@ public class GameCommonUtil {
 			if (!player.getPlayerId().equals(curWinnerPlayer.getPlayerId())) {
 				player.setCurScore(player.getCurScore() - player.getCurTotalStakeScore() - 1);
 				curWinnerPlayer.setCurScore(curWinnerPlayer.getCurScore() + player.getCurTotalStakeScore() + 1);
+				player.setLoseTimes(player.getLoseTimes() + 1);
+				if (player.getCardType() > player.getMaxCardType()) {
+					player.setMaxCardType(player.getCardType());
+				}
+			}else{
+				curWinnerPlayer.setWinTimes(curWinnerPlayer.getWinTimes() + 1);
+				if (curWinnerPlayer.getCardType() > curWinnerPlayer.getMaxCardType()) {
+					curWinnerPlayer.setMaxCardType(curWinnerPlayer.getCardType());
+				}
 			}
 		}
 		/**计算每个玩家总得分*/
