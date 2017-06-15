@@ -146,6 +146,17 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 					gameService.delRoomConfirmBeforeReturnHall(ctx, request);
 					break;
 					
+				case refreshRoom:
+					/**没有房间，则直接返回大厅*/
+					if (msg.getRoomId() == null) {
+						/**由于重连后，channel与playerId的映射关系会丢失，所以这里需要重新映射*/
+						SessionContainer.addChannel(ctx, msg.getPlayerId());
+						SessionContainer.sendErrorMsg(ctx, "参数不能为空", msgType, request);
+						return;
+					}
+					gameService.delRoomConfirmBeforeReturnHall(ctx, request);
+					break;
+					
 				default:
 					SessionContainer.sendErrorMsg(ctx, "msgType消息类型参数错误", msgType, request);
 					break;

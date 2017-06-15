@@ -846,6 +846,7 @@ public class GameServiceImpl implements GameService {
 		if (!GameCommonUtil.isExistPlayerInRoom(msg.getPlayerId(), playerList)) {
 			return SessionContainer.sendErrorMsg(ctx, "当前请求的玩家不在此房间中", MsgTypeEnum.refreshRoom.msgType, request);
 		}
+		
 		return null;
 	}
 	
@@ -884,7 +885,12 @@ public class GameServiceImpl implements GameService {
 		}
 		/**通知玩家返回大厅*/
 		result.setMsgType(MsgTypeEnum.delRoomConfirmBeforeReturnHall.msgType);
-		SessionContainer.sendTextMsgByPlayerId(roomId, msg.getPlayerId(), result);
+		if (SessionContainer.sendTextMsgByPlayerId(roomId, msg.getPlayerId(), result)) {
+			/**将roomId从用户信息中去除*/
+			UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
+			userInfo.setRoomId(null);
+			SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
+		}
 		return result;
 	}
 	
