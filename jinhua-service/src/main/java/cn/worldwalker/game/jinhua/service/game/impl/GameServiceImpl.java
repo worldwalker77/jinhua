@@ -961,7 +961,9 @@ public class GameServiceImpl implements GameService {
 		/**1为断线后的刷新，所以需要设置在线状态，并通知其他玩家*/
 		if (msg.getRefreshType() == 1) {
 			GameCommonUtil.setOnlineStatus(playerList, msg.getPlayerId(), OnlineStatusEnum.online);
-			long msgId = SessionContainer.sendTextMsgByPlayerIdSet(roomId, GameCommonUtil.getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), result);
+			long msgId = SessionContainer.sendTextMsgByPlayerIdSet(roomId, 
+					GameCommonUtil.getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), 
+					new Result(0, null, MsgTypeEnum.onlineNotice.msgType));
 			result.setMsgId(msgId);
 		}
 		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
