@@ -30,6 +30,7 @@ import cn.worldwalker.game.jinhua.domain.game.PlayerInfo;
 import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
 import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.Result;
+import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 
 @Component
 public class SessionContainer {
@@ -107,9 +108,9 @@ public class SessionContainer {
 		}
 	}
 	
-	 public static Result sendErrorMsg(ChannelHandlerContext ctx, String errorDesc, Integer msgType, GameRequest request){
-		log.error(errorDesc + ", request:" + JsonUtil.toJson(request));
-		Result result = new Result(1, errorDesc, msgType, GameTypeEnum.jinhua.gameType);
+	 public static Result sendErrorMsg(ChannelHandlerContext ctx, ResultCode resultCode, Integer msgType, GameRequest request){
+		log.error(resultCode.insideDesc + ", request:" + JsonUtil.toJson(request));
+		Result result = new Result(resultCode.code, resultCode.returnDesc, msgType, GameTypeEnum.jinhua.gameType);
 		try {
 			sendTextMsg(ctx, result);
 		} catch (Exception e) {

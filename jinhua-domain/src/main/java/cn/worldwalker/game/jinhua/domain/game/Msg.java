@@ -9,6 +9,7 @@ public class Msg {
 	private Integer totalGames;//10局，20局，30局
 	private Integer stakeLimit;//押注封顶
 	private Integer stakeTimesLimit;//押注次数封顶
+	private Integer refreshType;//刷新类型 1，断线重连刷新  2 消息id不连续刷新
 	public Long getRoomId() {
 		return roomId;
 	}
@@ -56,6 +57,12 @@ public class Msg {
 	}
 	public void setCurStakeScore(Integer curStakeScore) {
 		this.curStakeScore = curStakeScore;
+	}
+	public Integer getRefreshType() {
+		return refreshType;
+	}
+	public void setRefreshType(Integer refreshType) {
+		this.refreshType = refreshType;
 	}
 	
 }

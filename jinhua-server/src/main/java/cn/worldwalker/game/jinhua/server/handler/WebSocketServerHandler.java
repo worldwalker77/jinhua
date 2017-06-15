@@ -30,9 +30,9 @@ import org.springframework.stereotype.Service;
 import cn.worldwalker.game.jinhua.common.constant.Constant;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.IPUtil;
-import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
+import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 import cn.worldwalker.game.jinhua.server.dispatcher.TextMsgProcessDispatcher;
 @Sharable
 @Service
@@ -169,7 +169,7 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
 	             throws Exception {
 	         cause.printStackTrace();
-	         SessionContainer.sendErrorMsg(ctx, "系统异常", 0, new GameRequest());
+	         SessionContainer.sendErrorMsg(ctx, ResultCode.SYSTEM_ERROR, 0, new GameRequest());
 //	         ctx.close();
 	     }
 }

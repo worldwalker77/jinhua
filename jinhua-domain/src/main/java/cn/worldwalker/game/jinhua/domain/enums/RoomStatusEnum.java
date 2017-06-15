@@ -14,4 +14,13 @@ public enum RoomStatusEnum {
 		this.status = status;
 		this.desc = desc;
 	}
+	
+	public static RoomStatusEnum getRoomStatusEnum(Integer status){
+		for(RoomStatusEnum statusEnum : RoomStatusEnum.values()){
+			if (statusEnum.status.equals(status)) {
+				return statusEnum;
+			}
+		}
+		return null;
+	}
 }

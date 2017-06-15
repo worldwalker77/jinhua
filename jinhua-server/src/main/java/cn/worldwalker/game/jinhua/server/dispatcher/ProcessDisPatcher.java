@@ -11,6 +11,7 @@ import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
 import cn.worldwalker.game.jinhua.domain.game.UserInfo;
+import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 
 public abstract class ProcessDisPatcher {
 	
@@ -21,13 +22,13 @@ public abstract class ProcessDisPatcher {
 		request = JsonUtil.toObject(textMsg, GameRequest.class);
 		if (null == request) {
 			logger.error("参数json解析异常");
-			SessionContainer.sendErrorMsg(ctx, "参数json解析异常", 0, new GameRequest());
+			SessionContainer.sendErrorMsg(ctx, ResultCode.SYSTEM_ERROR, 0, new GameRequest());
 			return;
 		}
 		
 		/**参数校验*/
 		if (request.getMsgType() == null || StringUtils.isBlank(request.getToken())) {
-			SessionContainer.sendErrorMsg(ctx, "参数不能为空", request.getMsgType(), request);
+			SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, request.getMsgType(), request);
 			return;
 		}
 		
@@ -37,7 +38,7 @@ public abstract class ProcessDisPatcher {
 		String token = request.getToken();
 		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(token);
 		if (userInfo == null) {
-			SessionContainer.sendErrorMsg(ctx, "需要重新登录", request.getMsgType(), request);
+			SessionContainer.sendErrorMsg(ctx, ResultCode.NEED_LOGIN, request.getMsgType(), request);
 			return;
 		}
 		SessionContainer.expireUserInfo(token);
@@ -45,7 +46,7 @@ public abstract class ProcessDisPatcher {
 		/**非进入大厅请求，则需要校验gameType*/
 		if (!MsgTypeEnum.entryHall.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
 			if (request.getGameType() == null) {
-				SessionContainer.sendErrorMsg(ctx, "参数不能为空", request.getMsgType(), request);
+				SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, request.getMsgType(), request);
 				return;
 			}
 		}
