@@ -23,6 +23,15 @@ public class RedisController {
 		return result;
 	}
 	
+	@RequestMapping("set")
+	@ResponseBody
+	public Result set(String key, String value){
+		Result result = new Result();
+		jedisTemplate.set(key, value);
+		result.setData(jedisTemplate.get(key));
+		return result;
+	}
+	
 	@RequestMapping("hgetAll")
 	@ResponseBody
 	public Result hgetAll(String key){

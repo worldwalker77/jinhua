@@ -52,6 +52,10 @@ public class SessionContainer {
 	}
 	
 	public static boolean sendTextMsgByPlayerId(Long playerId, Result result){
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		
 		Channel channel = getChannel(playerId);
 		if (null != channel) {
 			try {
@@ -66,6 +70,10 @@ public class SessionContainer {
 	}
 	
 	public static boolean sendTextMsgByPlayerId(Long roomId, Long playerId, Result result){
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		
 		long msgId = 0;
 		Channel channel = getChannel(playerId);
 		if (null != channel) {
@@ -87,6 +95,10 @@ public class SessionContainer {
 		/**从redis通过自增获取当前房间的msgId，这里不做异常捕获，交给MsgProcessDispatcher层进行统一捕获，*/
 		long msgId = jedisTemplate.hincrBy(Constant.jinhuaRoomIdMsgIdMap, String.valueOf(roomId), 1);
 		result.setMsgId(msgId);
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		
 		for(Long playerId : playerIdSet){
 			Channel channel = getChannel(playerId);
 			if (null != channel) {
@@ -101,6 +113,10 @@ public class SessionContainer {
 	}
 	
 	public static void sendTextMsg(ChannelHandlerContext ctx, Result result){
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		
 		try {
 			ctx.channel().writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
 		} catch (Exception e) {
@@ -111,6 +127,10 @@ public class SessionContainer {
 	 public static Result sendErrorMsg(ChannelHandlerContext ctx, ResultCode resultCode, Integer msgType, GameRequest request){
 		log.error(resultCode.insideDesc + ", request:" + JsonUtil.toJson(request));
 		Result result = new Result(resultCode.code, resultCode.returnDesc, msgType, GameTypeEnum.jinhua.gameType);
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		
 		try {
 			sendTextMsg(ctx, result);
 		} catch (Exception e) {
@@ -212,7 +232,6 @@ public class SessionContainer {
 				map.remove(entry.getKey());
 			}
 		}
-		System.out.println(JsonUtil.toJson(map));
 	}
 
 }

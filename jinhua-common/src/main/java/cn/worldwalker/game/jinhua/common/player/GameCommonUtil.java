@@ -164,7 +164,6 @@ public class GameCommonUtil {
 		}else{/**如果当前局数等于总局数，则设置为一圈结束*/
 			roomInfo.setStatus(RoomStatusEnum.totalGameOver.status);
 		}
-		System.out.println("当前房间状态：" + roomInfo.getStatus());
 	}
 	
 	public static Long getNextOperatePlayerId(List<PlayerInfo> playerList, Long curPlayerId){

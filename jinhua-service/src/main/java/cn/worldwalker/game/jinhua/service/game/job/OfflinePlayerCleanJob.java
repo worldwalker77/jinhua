@@ -15,7 +15,6 @@ public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 	 */
 	@Override
 	public void execute() {
-		System.out.println("===================定时任务执行");
 		Map<String, String> map = jedisTemplate.hgetAll(Constant.jinhuaOfflinePlayerIdTimeMap);
 		if (map != null) {
 			Set<Entry<String, String>> entrySet = map.entrySet();

@@ -60,13 +60,11 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
     		     /**连接加入，将此ip对应的连接数+1，后续做负载均衡会用到*/
 				 jedisTemplate.hincrBy(Constant.jinhuaIpConnectCountMap, ip, 1);
 	    	  }
-	    	  System.out.println("channelActive");
 	    	  
 	      }
 	      
 	      @Override
 	      public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-	    	  System.out.println("channelInactive");
 	    	  SessionContainer.removeSession(ctx);
 	    	  String ip = IPUtil.getLocalIp();
 	    	  if (StringUtils.isNotBlank(ip)) {
@@ -91,14 +89,13 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	      
 	      @Override
 	      public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-	    	  System.out.println("channelReadComplete");
 	          ctx.flush();
 	      }
 	      
 	      private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest request){
 	          //如果http解码失败 则返回http异常 并且判断消息头有没有包含Upgrade字段(协议升级)
 	          if(!request.decoderResult().isSuccess() 
-	                  || (!"websocket".equals( request.headers().get("Upgrade")))    ){
+	                  || (!"websocket".equalsIgnoreCase((String)request.headers().get("Upgrade")))    ){
 	              sendHttpResponse(ctx, request, new DefaultFullHttpResponse(
 	                      HttpVersion.HTTP_1_1, HttpResponseStatus.BAD_REQUEST));
 	              return ;
@@ -113,6 +110,7 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	              handshaker.handshake(ctx.channel(), request);
 	          }
 	      }
+	      
 	      /**
 	       * websocket帧
 	       * @param ctx
@@ -121,19 +119,16 @@ public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>
 	      private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame){
 	          //判断是否关闭链路指令
 	          if(frame instanceof CloseWebSocketFrame){
-	        	  System.out.println("关闭==============");
 	              handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
 	              return ;
 	          }
 	          //判断是否Ping消息 -- ping/pong心跳包
 	          if(frame instanceof PingWebSocketFrame){
-	        	  System.out.println("心跳==============");
 	              ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
 	              return ;
 	          }
 	          //本程序仅支持文本消息， 不支持二进制消息
 	          if(frame instanceof TextWebSocketFrame){
-	        	  System.out.println("文本==============");
 		          textMsgProcessDispatcher.textMsgProcess(ctx, ((TextWebSocketFrame) frame).text());
 	          }
 	          

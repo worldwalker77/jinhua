@@ -37,7 +37,6 @@ public class MD5Util {
     // 返回形式只为数字
     private static String byteToNum(byte bByte) {
         int iRet = bByte;
-        System.out.println("iRet1=" + iRet);
         if (iRet < 0) {
             iRet += 256;
         }
@@ -55,7 +54,5 @@ public class MD5Util {
     
     public static void main(String[] args) {
     	String temp = encryptByMD5("hfdsklvncxl;lfdasffilvul;e");
-		System.out.println(temp);
-		System.out.println(temp.length());
 	}
 }

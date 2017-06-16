@@ -4,9 +4,12 @@ import io.netty.channel.ChannelHandlerContext;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import cn.worldwalker.game.jinhua.common.constant.Constant;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
+import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
@@ -14,6 +17,9 @@ import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 
 public abstract class ProcessDisPatcher {
+	
+	@Autowired
+	private JedisTemplate jedisTemplate;
 	
 	private static final Logger logger = Logger.getLogger(ProcessDisPatcher.class);
 	
@@ -31,7 +37,9 @@ public abstract class ProcessDisPatcher {
 			SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, request.getMsgType(), request);
 			return;
 		}
-		
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			logger.info("请求 : " + MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()).desc + " : " + textMsg);
+		}
 		/**
 		 * token登录检验
 		 */
