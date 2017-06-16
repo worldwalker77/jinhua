@@ -961,6 +961,8 @@ public class GameServiceImpl implements GameService {
 		/**1为断线后的刷新，所以需要设置在线状态，并通知其他玩家*/
 		if (msg.getRefreshType() == 1) {
 			GameCommonUtil.setOnlineStatus(playerList, msg.getPlayerId(), OnlineStatusEnum.online);
+			/**删除此玩家的离线标记*/
+			jedisTemplate.hdel(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(msg.getPlayerId()));
 			long msgId = SessionContainer.sendTextMsgByPlayerIdSet(roomId, 
 					GameCommonUtil.getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), 
 					new Result(0, null, MsgTypeEnum.onlineNotice.msgType));
@@ -1005,7 +1007,7 @@ public class GameServiceImpl implements GameService {
 		}
 		/**通知玩家返回大厅*/
 		result.setMsgType(MsgTypeEnum.delRoomConfirmBeforeReturnHall.msgType);
-		if (SessionContainer.sendTextMsgByPlayerId(roomId, msg.getPlayerId(), result)) {
+		if (SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result)) {
 			/**将roomId从用户信息中去除*/
 			UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
 			userInfo.setRoomId(null);
