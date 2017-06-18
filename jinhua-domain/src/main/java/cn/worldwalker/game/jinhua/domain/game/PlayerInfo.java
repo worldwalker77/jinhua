@@ -41,6 +41,8 @@ public class PlayerInfo {
 	private Integer roomCardNum;
 	/**最大牌型*/
 	private Integer maxCardType;
+	/**玩家ip*/
+	private String ip;
 	
 	public Long getPlayerId() {
 		return playerId;
@@ -149,6 +151,12 @@ public class PlayerInfo {
 	}
 	public void setMaxCardType(Integer maxCardType) {
 		this.maxCardType = maxCardType;
+	}
+	public String getIp() {
+		return ip;
+	}
+	public void setIp(String ip) {
+		this.ip = ip;
 	}
 	
 }

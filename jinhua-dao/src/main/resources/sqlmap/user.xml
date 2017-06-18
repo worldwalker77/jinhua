@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.worldwalker.game.jinhua.dao.user.UserDao">
+	
+	<resultMap id="UserResultMap" type="cn.worldwalker.game.jinhua.domain.model.UserModel" >
+		<id column="id" property="id"/>
+		<result column="nick_name" property="nickName"/>
+		<result column="head_img_url" property="headImgUrl"/>
+		<result column="wx_open_id" property="wxOpenId"/>
+		<result column="room_card_num" property="roomCardNum"/>
+		<result column="user_level" property="userLevel"/>
+		<result column="create_time" property="createTime"/>
+		<result column="update_time" property="updateTime"/>
+	</resultMap>
+	
+	<select id="getUserByWxOpenId"  parameterType = "String" resultType="cn.worldwalker.game.jinhua.domain.model.UserModel">
+	    select id, room_card_num, user_level from t_user where wx_open_id = #{wxOpenId} limit 1
+	</select>
+	
+	<select id="getUserById"  parameterType = "Long" resultType="cn.worldwalker.game.jinhua.domain.model.UserModel">
+	    select room_card_num, updateTime from t_user where id = #{id}
+	</select>
+	
+	<update id="deductRoomCard"  parameterType = "map">
+		update t_user set room_card_num = room_card_num - #{deductNum}, update_time = now() where id = #{id} and update_time = #{updateTime}
+	    select room_card_num, updateTime from t_user where id = #{id}
+	</update>
+	
+    <insert id="insertUser" parameterType="cn.worldwalker.game.jinhua.domain.model.UserModel">  
+	     <!-- 使用这种方式要注意，resultType是要设置的，否则将抛异常，该值对应的User类中的主键类型 -->  
+	     <!-- keyProperty对应的是UserModel类中的主键名，假设取名为user_id，则这边也要改成user_id -->  
+	     <selectKey keyProperty="id" resultType="Long">  
+	         select LAST_INSERT_ID()  
+	     </selectKey>  
+	     insert into t_user( nick_name, 
+	     					head_img_url, 
+	     					wx_open_id,
+	     					create_time,
+	     					update_time) 
+	     			values( #{nickName}, 
+	     					#{headImgUrl}, 
+	     					#{wxOpenId}, 
+	     					now(), 
+	     					now())    
+    </insert>  
+
+</mapper>
+
+

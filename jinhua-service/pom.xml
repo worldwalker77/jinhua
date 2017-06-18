@@ -34,5 +34,11 @@
     	<version>0.0.1.0-SNAPSHOT</version>
     </dependency>
     
+    <dependency>
+    	<groupId>cn.worldwalker.game.jinhua.rpc</groupId>
+    	<artifactId>jinhua-rpc</artifactId>
+    	<version>0.0.1.0-SNAPSHOT</version>
+    </dependency>
+    
   </dependencies>
 </project>

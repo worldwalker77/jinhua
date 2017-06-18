@@ -17,6 +17,8 @@ public class UserInfo {
 	private String token;
 	
 	private String headImgUrl;
+	
+	private String remoteIp;
 
 	public Long getPlayerId() {
 		return playerId;
@@ -80,6 +82,14 @@ public class UserInfo {
 
 	public void setHeadImgUrl(String headImgUrl) {
 		this.headImgUrl = headImgUrl;
+	}
+
+	public String getRemoteIp() {
+		return remoteIp;
+	}
+
+	public void setRemoteIp(String remoteIp) {
+		this.remoteIp = remoteIp;
 	}
 	
 }

@@ -21,7 +21,9 @@ public enum MsgTypeEnum {
 	refreshRoom(17, "刷新房间信息"),
 	offlineNotice(18, "通知玩家离线"),
 	onlineNotice(19, "通知玩家上线"),
-	delRoomConfirmBeforeReturnHall(20, "客户端返回大厅时的通知消息");
+	delRoomConfirmBeforeReturnHall(20, "客户端返回大厅时的通知消息"),
+	queryPlayerInfo(21, "查看玩家信息"),
+	dissolveRoomCausedByOffline(22, "玩家离线超过20分钟，解散房间");
 	
 	public int msgType;
 	public String desc;

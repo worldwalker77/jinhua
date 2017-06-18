@@ -158,6 +158,14 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 					}
 					gameService.refreshRoom(ctx, request);
 					break;
+				case queryPlayerInfo:
+					/**没有房间，则直接返回大厅*/
+					if (msg.getRoomId() == null) {
+						SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, msgType, request);
+						return;
+					}
+					gameService.refreshRoom(ctx, request);
+					break;
 					
 				default:
 					SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, msgType, request);

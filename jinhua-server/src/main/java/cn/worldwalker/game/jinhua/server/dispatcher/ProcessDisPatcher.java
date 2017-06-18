@@ -63,7 +63,10 @@ public abstract class ProcessDisPatcher {
 			msg = new Msg();
 			request.setMsg(msg);
 		}
-		msg.setPlayerId(userInfo.getPlayerId());
+		/**查看其它玩家信息的时候，玩家id是前端传过来的，不从后端获取*/
+		if (!MsgTypeEnum.queryPlayerInfo.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
+			msg.setPlayerId(userInfo.getPlayerId());
+		}
 		if (msg.getRoomId() == null) {
 			msg.setRoomId(userInfo.getRoomId());
 		}

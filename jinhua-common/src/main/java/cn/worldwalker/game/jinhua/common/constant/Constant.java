@@ -24,4 +24,14 @@ public class Constant {
 	/**跟注次数上限*/
 	public final static Integer stakeTimesLimit = 6;
 	
+	 // // 第三方用户唯一凭证
+    public static String appId = "wx7681f478b552345a";
+    // // 第三方用户唯一凭证密钥
+    public static String appSecret = "aa78590d5de26457296c3dd4fc8c1a14";
+	
+	public static String getWXUserInfoUrl = "https://api.weixin.qq.com/sns/userinfo?access_token=" + "ACCESS_TOKEN&openid=OPENID";
+	
+	public static String getOpenidAndAccessCode = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + appId + "&secret=" + appSecret + "&grant_type=authorization_code&code=CODE";
+
+	
 }

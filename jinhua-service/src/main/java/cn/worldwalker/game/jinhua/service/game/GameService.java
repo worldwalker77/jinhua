@@ -1,12 +1,14 @@
 package cn.worldwalker.game.jinhua.service.game;
 
+import javax.servlet.http.HttpServletRequest;
+
 import io.netty.channel.ChannelHandlerContext;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 
 public interface GameService {
 	
-	public Result login(String token, String deviceType);
+	public Result login(String code, String deviceType, HttpServletRequest request);
 	
 	public Result getIpByRoomId(String token, Long roomId);
 	
@@ -42,6 +44,6 @@ public interface GameService {
 	
 	public Result delRoomConfirmBeforeReturnHall(ChannelHandlerContext ctx, GameRequest request);
 	
-	
+	public Result queryOtherPlayerInfo(ChannelHandlerContext ctx, GameRequest request);
 	
 }

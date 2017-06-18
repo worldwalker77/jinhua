@@ -26,6 +26,7 @@ public class TestController {
 	public ModelAndView testIndex(){
 		ModelAndView mv = new ModelAndView();
 		mv.setViewName("test/testIndex");
+		testService.myTest(new Test());
 		return mv;
 	}
 	

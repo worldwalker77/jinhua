@@ -1,5 +1,6 @@
 package cn.worldwalker.game.jinhua.web.game;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,9 @@ public class GameController {
 	
 	@RequestMapping("login")
 	@ResponseBody
-	public Result login(String token, String deviceType, HttpServletResponse response){
+	public Result login(String code, String deviceType, HttpServletResponse response, HttpServletRequest request){
 		response.addHeader("Access-Control-Allow-Origin", "*");
-		return gameService.login(token, deviceType);
+		return gameService.login(code, deviceType, request);
 	}
 	
 	@RequestMapping("getIpByRoomId")

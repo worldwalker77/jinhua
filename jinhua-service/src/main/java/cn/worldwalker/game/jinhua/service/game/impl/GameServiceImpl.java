@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,6 +29,7 @@ import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.MD5Util;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
+import cn.worldwalker.game.jinhua.dao.user.UserDao;
 import cn.worldwalker.game.jinhua.domain.enums.CardTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.DissolveStatusEnum;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
@@ -40,8 +43,11 @@ import cn.worldwalker.game.jinhua.domain.game.Msg;
 import cn.worldwalker.game.jinhua.domain.game.PlayerInfo;
 import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
 import cn.worldwalker.game.jinhua.domain.game.UserInfo;
+import cn.worldwalker.game.jinhua.domain.model.UserModel;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
+import cn.worldwalker.game.jinhua.domain.weixin.WeiXinUserInfo;
+import cn.worldwalker.game.jinhua.rpc.weixin.WeiXinRpc;
 import cn.worldwalker.game.jinhua.service.game.GameService;
 
 @Service
@@ -50,22 +56,39 @@ public class GameServiceImpl implements GameService {
 	private final static Log log = LogFactory.getLog(GameServiceImpl.class);
 	
 	@Autowired
+	private WeiXinRpc weiXinRpc;
+	@Autowired
 	private JedisTemplate jedisTemplate;
-	
+	@Autowired
+	private UserDao userDao;
 	
 	@Override
-	public Result login(String token, String deviceType) {
+	public Result login(String code, String deviceType, HttpServletRequest request) {
 		Result result = new Result();
+		WeiXinUserInfo weixinUserInfo = weiXinRpc.getWeiXinUserInfo(code);
+		if (null == weixinUserInfo) {
+			result.setCode(ResultCode.SYSTEM_ERROR.code);
+			result.setDesc(ResultCode.SYSTEM_ERROR.returnDesc);
+			return result;
+		}
+		UserModel userModel = userDao.getUserByWxOpenId(weixinUserInfo.getOpneid());
+		if (null == userModel) {
+			userModel = new UserModel();
+			userModel.setNickName(weixinUserInfo.getName());
+			userModel.setHeadImgUrl(weixinUserInfo.getHeadImgUrl());
+			userModel.setWxOpenId(weixinUserInfo.getOpneid());
+			userDao.insertUser(userModel);
+		}
 		UserInfo userInfo = new UserInfo();
-		long playerId = GameCommonUtil.genPlayerId();
-		userInfo.setPlayerId(playerId);
-		userInfo.setNickName("NickName_" + playerId);
-		userInfo.setLevel(1);
+		userInfo.setPlayerId(userModel.getId());
+		userInfo.setNickName(weixinUserInfo.getName());
+		userInfo.setLevel(userModel.getUserLevel());
 		userInfo.setServerIp("119.23.57.236");
 		userInfo.setPort("3389");
-		String loginToken = genToken(playerId);
+		userInfo.setRemoteIp(IPUtil.getRemoteIp(request));
+		String loginToken = genToken(userModel.getId());
 		SessionContainer.setUserInfoToRedis(loginToken, userInfo);
-		userInfo.setHeadImgUrl("http://img.zcool.cn/community/01e282574bc0126ac72525ae39ce5f.jpg");
+		userInfo.setHeadImgUrl(weixinUserInfo.getHeadImgUrl());
 		userInfo.setToken(loginToken);
 		result.setData(userInfo);
 		return result;
@@ -171,6 +194,8 @@ public class GameServiceImpl implements GameService {
 		
 		/**将roomId设置进用户信息中，后面会使用到*/
 		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
+		/**设置当前用户ip*/
+		playerInfo.setIp(userInfo.getRemoteIp());
 		userInfo.setRoomId(roomId);
 		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
 		/**将当前房间的信息设置到redis中*/
@@ -221,6 +246,11 @@ public class GameServiceImpl implements GameService {
 			}
 			playerIdSet.add(tempPalyerId);
 		}
+		/**将roomId设置进用户信息中，后面会使用到*/
+		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
+		userInfo.setRoomId(roomId);
+		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
+		
 		PlayerInfo playerInfo = new PlayerInfo();
 		playerInfo.setPlayerId(msg.getPlayerId());
 		playerInfo.setNickName("nickName_" + msg.getPlayerId());
@@ -232,14 +262,12 @@ public class GameServiceImpl implements GameService {
 		playerInfo.setWinTimes(0);
 		playerInfo.setLoseTimes(0);
 		playerInfo.setMaxCardType(CardTypeEnum.C235.cardType);
+		playerInfo.setIp(userInfo.getRemoteIp());
 		playerList.add(playerInfo);
 		roomInfo.setUpdateTime(new Date());
 		/**将当前加入的玩家信息加入房间，并设置进缓存*/
 		SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
-		/**将roomId设置进用户信息中，后面会使用到*/
-		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
-		userInfo.setRoomId(roomId);
-		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
+		
 		/**设置playerId与roomId的映射关系*/
 		jedisTemplate.hset(Constant.jinhuaPlayerIdRoomIdMap, String.valueOf(msg.getPlayerId()), String.valueOf(roomId));
 		result = new Result();
@@ -758,11 +786,11 @@ public class GameServiceImpl implements GameService {
 		roomInfo.setUpdateTime(new Date());
 		SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
 		if (playerList.size() == 1) {
+			/**解散房间*/
+			doDissolveRoom(roomId, GameCommonUtil.getPlayerIds(playerList));
 			result.setMsgType(MsgTypeEnum.successDissolveRoom.msgType);
 			data.put("roomId", roomId);
 			SessionContainer.sendTextMsgByPlayerId(roomId, msg.getPlayerId(), result);
-			/**解散房间*/
-			doDissolveRoom(roomId, GameCommonUtil.getPlayerIds(playerList));
 			return result;
 		}
 		result.setMsgType(MsgTypeEnum.dissolveRoom.msgType);
@@ -798,10 +826,10 @@ public class GameServiceImpl implements GameService {
 		SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
 		/**如果大部分人同意，则推送解散消息并解散房间*/
 		if (agreeDissolveCount >= (playerList.size()/2 + 1)) {
-			result.setMsgType(MsgTypeEnum.successDissolveRoom.msgType);
-			SessionContainer.sendTextMsgByPlayerIdSet(roomId, GameCommonUtil.getPlayerIdSet(playerList), result);
 			/**解散房间*/
 			doDissolveRoom(roomId, GameCommonUtil.getPlayerIds(playerList));
+			result.setMsgType(MsgTypeEnum.successDissolveRoom.msgType);
+			SessionContainer.sendTextMsgByPlayerIdSet(roomId, GameCommonUtil.getPlayerIdSet(playerList), result);
 			return result;
 		}
 		result.setMsgType(MsgTypeEnum.agreeDissolveRoom.msgType);
@@ -906,6 +934,10 @@ public class GameServiceImpl implements GameService {
 					newPlayer.setRoomCardNum(player.getRoomCardNum());
 					newPlayer.setLevel(player.getLevel());
 					newPlayer.setStatus(player.getStatus());
+					/**如果是已看牌，则要给此玩家返回牌型*/
+					if (PlayerStatusEnum.watch.status.equals(player.getStatus())) {
+						
+					}
 					
 					newPlayer.setTotalScore(player.getTotalScore());
 					newPlayer.setCurStakeScore(player.getCurStakeScore());
@@ -918,6 +950,7 @@ public class GameServiceImpl implements GameService {
 				break;
 			case curGameOver:
 				/**此处new一个新对象，是返回给客户端需要返回的数据，不需要返回的数据则隐藏掉*/
+				newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 				for(PlayerInfo player : playerList){
 					PlayerInfo newPlayer = new PlayerInfo();
 					newPlayer.setPlayerId(player.getPlayerId());
@@ -926,6 +959,7 @@ public class GameServiceImpl implements GameService {
 					newPlayer.setOrder(player.getOrder());
 					newPlayer.setRoomCardNum(player.getRoomCardNum());
 					newPlayer.setLevel(player.getLevel());
+					newPlayer.setCurScore(player.getCurScore());
 					newPlayer.setStatus(player.getStatus());
 					newRoomInfo.getPlayerList().add(newPlayer);
 				}
@@ -935,6 +969,7 @@ public class GameServiceImpl implements GameService {
 			case totalGameOver:
 				/**此处new一个新对象，是返回给客户端需要返回的数据，不需要返回的数据则隐藏掉*/
 				newRoomInfo.setTotalWinnerId(roomInfo.getTotalWinnerId());
+				newRoomInfo.setCurWinnerId(roomInfo.getCurWinnerId());
 				for(PlayerInfo player : playerList){
 					PlayerInfo newPlayer = new PlayerInfo();
 					newPlayer.setPlayerId(player.getPlayerId());
@@ -1013,6 +1048,41 @@ public class GameServiceImpl implements GameService {
 			userInfo.setRoomId(null);
 			SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
 		}
+		return result;
+	}
+	@Override
+	public Result queryOtherPlayerInfo(ChannelHandlerContext ctx,
+			GameRequest request) {
+		Result result = new Result();
+		Map<String, Object> data = new HashMap<String, Object>();
+		result.setData(data);
+		
+		Msg msg = request.getMsg();
+		Long roomId = msg.getRoomId();
+		RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(roomId);
+		if (null == roomInfo) {
+			return SessionContainer.sendErrorMsg(ctx, ResultCode.ROOM_NOT_EXIST, MsgTypeEnum.queryPlayerInfo.msgType, request);
+		}
+		List<PlayerInfo> playerList = roomInfo.getPlayerList();
+		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
+		if (!GameCommonUtil.isExistPlayerInRoom(userInfo.getPlayerId(), playerList)) {
+			return SessionContainer.sendErrorMsg(ctx, ResultCode.PLAYER_NOT_IN_ROOM, MsgTypeEnum.queryPlayerInfo.msgType, request);
+		}
+		PlayerInfo queryPlayer = null;
+		for(PlayerInfo player : playerList){
+			if (player.getPlayerId().equals(msg.getPlayerId())) {
+				queryPlayer = player;
+				break;
+			}
+		}
+		PlayerInfo newPalyer = new PlayerInfo();
+		newPalyer.setPlayerId(queryPlayer.getPlayerId());
+		newPalyer.setNickName(queryPlayer.getNickName());
+		newPalyer.setHeadImgUrl(queryPlayer.getHeadImgUrl());
+		newPalyer.setIp(queryPlayer.getIp());
+		result.setData(newPalyer);
+		result.setMsgType(MsgTypeEnum.queryPlayerInfo.msgType);
+		SessionContainer.sendTextMsgByPlayerId(userInfo.getPlayerId(), result);
 		return result;
 	}
 	

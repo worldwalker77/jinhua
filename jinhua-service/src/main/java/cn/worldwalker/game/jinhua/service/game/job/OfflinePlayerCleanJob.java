@@ -1,11 +1,18 @@
 package cn.worldwalker.game.jinhua.service.game.job;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import cn.worldwalker.game.jinhua.common.constant.Constant;
+import cn.worldwalker.game.jinhua.common.player.GameCommonUtil;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
+import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
+import cn.worldwalker.game.jinhua.domain.game.PlayerInfo;
+import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
+import cn.worldwalker.game.jinhua.domain.result.Result;
 
 
 public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
@@ -29,6 +36,14 @@ public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 				if (diffTime > 20*60*1000L) {
 					String[] playerIds = new String[1];
 					playerIds[0] = playerIdStr;
+					RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(Long.valueOf(roomIdStr));
+					List<PlayerInfo> playerList = roomInfo.getPlayerList();
+					Result result = new Result();
+					result.setMsgType(MsgTypeEnum.dissolveRoomCausedByOffline.msgType);
+					Map<String, Object> data = new HashMap<String, Object>();
+					data.put("playerId", playerIdStr);
+					result.setData(data);
+					SessionContainer.sendTextMsgByPlayerIdSet(Long.valueOf(roomIdStr), GameCommonUtil.getPlayerIdSetWithoutSelf(playerList, Long.valueOf(playerIdStr)), result);
 					SessionContainer.cleanPlayerAndRoomInfo(Long.valueOf(roomIdStr), playerIds);
 				}
 			}
