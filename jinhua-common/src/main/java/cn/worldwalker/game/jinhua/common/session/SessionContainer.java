@@ -154,6 +154,7 @@ public class SessionContainer {
 		if (playerId != null) {
 			sessionMap.remove(playerId);
 			String roomId = jedisTemplate.hget(Constant.jinhuaPlayerIdRoomIdMap, String.valueOf(playerId));
+			System.out.println("====>>>removeSession,玩家断线，playerId:" + playerId + "roomId:" + roomId);
 			/**如果此掉线的playerId有房间信息*/
 			if (StringUtils.isNotBlank(roomId)) {
 				/**设置离线playerId与roomId的映射关系*/

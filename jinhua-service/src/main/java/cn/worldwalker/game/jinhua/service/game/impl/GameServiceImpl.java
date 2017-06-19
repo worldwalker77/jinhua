@@ -875,6 +875,7 @@ public class GameServiceImpl implements GameService {
 	 * 解散1 删除redis房间信息 2 删除房间消息redis消息id计数器 3 删除playerId与roomId的映射关系  4 删除离线playerId与时间的映射关系  5 删除锁
 	 */
 	private void doDissolveRoom(Long roomId, String[] players){
+		System.out.println("doDissolveRoom,解散房间，roomId：" + roomId + ",players:" + JsonUtil.toJson(players));
 		jedisTemplate.hdel(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
 		jedisTemplate.hdel(Constant.jinhuaRoomIdMsgIdMap, String.valueOf(roomId));
 		jedisTemplate.hdel(Constant.jinhuaPlayerIdRoomIdMap, players);
