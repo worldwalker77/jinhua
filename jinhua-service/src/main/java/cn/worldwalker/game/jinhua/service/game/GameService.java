@@ -10,6 +10,8 @@ public interface GameService {
 	
 	public Result login(String code, String deviceType, HttpServletRequest request);
 	
+	public Result login1(String code, String deviceType, HttpServletRequest request);
+	
 	public Result getIpByRoomId(String token, Long roomId);
 	
 	public Result entryHall(ChannelHandlerContext ctx, GameRequest request);
@@ -31,6 +33,8 @@ public interface GameService {
 	public Result discardCards(ChannelHandlerContext ctx, GameRequest request);
 	
 	public Result curSettlement(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result chatMsg(ChannelHandlerContext ctx, GameRequest request);
 	
 	public Result totalSettlement(ChannelHandlerContext ctx, GameRequest request);
 	

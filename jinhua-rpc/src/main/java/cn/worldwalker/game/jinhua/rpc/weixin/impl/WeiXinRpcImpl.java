@@ -69,5 +69,5 @@ public class WeiXinRpcImpl implements WeiXinRpc{
 			return weiXinAccess;
 		}
 	}
-
+	
 }

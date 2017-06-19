@@ -10,6 +10,8 @@ public class Msg {
 	private Integer stakeLimit;//押注封顶
 	private Integer stakeTimesLimit;//押注次数封顶
 	private Integer refreshType;//刷新类型 1，断线重连刷新  2 消息id不连续刷新
+	private Integer chatType;//聊天消息类型 1 文本 2 表情 3语音 4图片
+	private String chatMsg;//消息
 	public Long getRoomId() {
 		return roomId;
 	}
@@ -63,6 +65,18 @@ public class Msg {
 	}
 	public void setRefreshType(Integer refreshType) {
 		this.refreshType = refreshType;
+	}
+	public Integer getChatType() {
+		return chatType;
+	}
+	public void setChatType(Integer chatType) {
+		this.chatType = chatType;
+	}
+	public String getChatMsg() {
+		return chatMsg;
+	}
+	public void setChatMsg(String chatMsg) {
+		this.chatMsg = chatMsg;
 	}
 	
 }

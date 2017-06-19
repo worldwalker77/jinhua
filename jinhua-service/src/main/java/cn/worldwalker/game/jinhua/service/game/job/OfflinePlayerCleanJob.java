@@ -9,6 +9,7 @@ import java.util.Set;
 import cn.worldwalker.game.jinhua.common.constant.Constant;
 import cn.worldwalker.game.jinhua.common.player.GameCommonUtil;
 import cn.worldwalker.game.jinhua.common.session.SessionContainer;
+import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.PlayerInfo;
 import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
@@ -34,9 +35,12 @@ public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 				Long diffTime = System.currentTimeMillis() - offlineTime;
 				/**离线时间超过20分钟，则删除玩家及房间信息*/
 				if (diffTime > 20*60*1000L) {
+					System.out.println("playerId : " + playerIdStr);
+					System.out.println("roomId : " + roomIdStr);
 					String[] playerIds = new String[1];
 					playerIds[0] = playerIdStr;
 					RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(Long.valueOf(roomIdStr));
+					System.out.println("roomInfo : " + JsonUtil.toJson(roomInfo));
 					List<PlayerInfo> playerList = roomInfo.getPlayerList();
 					Result result = new Result();
 					result.setMsgType(MsgTypeEnum.dissolveRoomCausedByOffline.msgType);

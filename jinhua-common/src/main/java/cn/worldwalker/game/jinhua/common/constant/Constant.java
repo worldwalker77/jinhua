@@ -13,8 +13,10 @@ public class Constant {
 	/**ip与此ip上连接数的映射关系*/
 	public final static String jinhuaIpConnectCountMap = "jinhua_ip_connect_count_map";
 	
-	/**请求和返回信息日志打印*/
+	/**请求和返回信息日志打印开关*/
 	public final static String jinhuaLogInfoFuse = "jinhua_log_info_fuse";
+	/**登录切换开关*/
+	public final static String jinhuaLoginFuse = "jinhua_login_fuse";
 	
 	
 	/**底注*/

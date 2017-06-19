@@ -65,6 +65,11 @@ public class GameServiceImpl implements GameService {
 	@Override
 	public Result login(String code, String deviceType, HttpServletRequest request) {
 		Result result = new Result();
+		if (StringUtils.isBlank(code)) {
+			result.setCode(ResultCode.PARAM_ERROR.code);
+			result.setDesc(ResultCode.PARAM_ERROR.returnDesc);
+			return result;
+		}
 		WeiXinUserInfo weixinUserInfo = weiXinRpc.getWeiXinUserInfo(code);
 		if (null == weixinUserInfo) {
 			result.setCode(ResultCode.SYSTEM_ERROR.code);
@@ -79,10 +84,16 @@ public class GameServiceImpl implements GameService {
 			userModel.setWxOpenId(weixinUserInfo.getOpneid());
 			userDao.insertUser(userModel);
 		}
+		Long roomId = null;
+		String temp = jedisTemplate.hget(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(userModel.getId()));
+		if (StringUtils.isNotBlank(temp)) {
+			roomId = Long.valueOf(temp.split("_")[0]);
+		}
 		UserInfo userInfo = new UserInfo();
 		userInfo.setPlayerId(userModel.getId());
+		userInfo.setRoomId(roomId);
 		userInfo.setNickName(weixinUserInfo.getName());
-		userInfo.setLevel(userModel.getUserLevel());
+		userInfo.setLevel(userModel.getUserLevel() == null ? 1 : userModel.getUserLevel());
 		userInfo.setServerIp("119.23.57.236");
 		userInfo.setPort("3389");
 		userInfo.setRemoteIp(IPUtil.getRemoteIp(request));
@@ -93,6 +104,28 @@ public class GameServiceImpl implements GameService {
 		result.setData(userInfo);
 		return result;
 	}
+	
+	@Override
+	public Result login1(String code, String deviceType,HttpServletRequest request) {
+		Result result = new Result();
+		Long roomId = null;
+		Long playerId = GameCommonUtil.genPlayerId();
+		UserInfo userInfo = new UserInfo();
+		userInfo.setPlayerId(playerId);
+		userInfo.setRoomId(roomId);
+		userInfo.setNickName("nickName_" + playerId);
+		userInfo.setLevel(1);
+		userInfo.setServerIp("119.23.57.236");
+		userInfo.setPort("3389");
+		userInfo.setRemoteIp(IPUtil.getRemoteIp(request));
+		String loginToken = genToken(playerId);
+		SessionContainer.setUserInfoToRedis(loginToken, userInfo);
+		userInfo.setHeadImgUrl("http://wx.qlogo.cn/mmopen/wibbRT31wkCR4W9XNicL2h2pgaLepmrmEsXbWKbV0v9ugtdibibDgR1ybONiaWFtVeVtYWGWhObRiaiaicMgw8zat8Y5p6YzQbjdstE2/0");
+		userInfo.setToken(loginToken);
+		result.setData(userInfo);
+		return result;
+	}
+	
 	/**
 	 * 登录后token生成，当前时间+
 	 * @return
@@ -1085,7 +1118,28 @@ public class GameServiceImpl implements GameService {
 		SessionContainer.sendTextMsgByPlayerId(userInfo.getPlayerId(), result);
 		return result;
 	}
-	
-	
+	@Override
+	public Result chatMsg(ChannelHandlerContext ctx, GameRequest request) {
+		Result result = new Result();
+		Map<String, Object> data = new HashMap<String, Object>();
+		result.setData(data);
+		
+		Msg msg = request.getMsg();
+		Long roomId = msg.getRoomId();
+		RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(roomId);
+		if (null == roomInfo) {
+			return SessionContainer.sendErrorMsg(ctx, ResultCode.ROOM_NOT_EXIST, MsgTypeEnum.chatMsg.msgType, request);
+		}
+		List<PlayerInfo> playerList = roomInfo.getPlayerList();
+		if (!GameCommonUtil.isExistPlayerInRoom(msg.getPlayerId(), playerList)) {
+			return SessionContainer.sendErrorMsg(ctx, ResultCode.PLAYER_NOT_IN_ROOM, MsgTypeEnum.chatMsg.msgType, request);
+		}
+		result.setMsgType(MsgTypeEnum.chatMsg.msgType);
+		data.put("playerId", msg.getPlayerId());
+		data.put("chatMsg", msg.getChatMsg());
+		data.put("chatType", msg.getChatType());
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, GameCommonUtil.getPlayerIdSet(playerList), result);
+		return result;
+	}
 	
 }
