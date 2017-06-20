@@ -43,6 +43,8 @@ public class PlayerInfo {
 	private Integer maxCardType;
 	/**玩家ip*/
 	private String ip;
+	/**在线状态1在线 0离线*/
+	private Integer onlineStatus;
 	
 	public Long getPlayerId() {
 		return playerId;
@@ -157,6 +159,12 @@ public class PlayerInfo {
 	}
 	public void setIp(String ip) {
 		this.ip = ip;
+	}
+	public Integer getOnlineStatus() {
+		return onlineStatus;
+	}
+	public void setOnlineStatus(Integer onlineStatus) {
+		this.onlineStatus = onlineStatus;
 	}
 	
 }

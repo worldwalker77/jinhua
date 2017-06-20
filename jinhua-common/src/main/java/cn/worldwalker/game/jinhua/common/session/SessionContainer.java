@@ -44,9 +44,7 @@ public class SessionContainer {
 	private static Map<Long, Channel> sessionMap = new ConcurrentHashMap<Long, Channel>();
 	
 	public static void addChannel(ChannelHandlerContext ctx, Long playerId){
-		if (!sessionMap.containsKey(playerId)) {
-			sessionMap.put(playerId, ctx.channel());
-		}
+		sessionMap.put(playerId, ctx.channel());
 	}
 	
 	public static Channel getChannel(Long playerId){
@@ -57,7 +55,6 @@ public class SessionContainer {
 		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
 			log.info("返回 ：" + JsonUtil.toJson(result));
 		}
-		
 		Channel channel = getChannel(playerId);
 		if (null != channel) {
 			try {
@@ -115,7 +112,7 @@ public class SessionContainer {
 	}
 	
 	public static void sendTextMsg(ChannelHandlerContext ctx, Result result){
-		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse)) && !MsgTypeEnum.heartBeat.equals(MsgTypeEnum.getMsgTypeEnumByType(result.getMsgType()))) {
 			log.info("返回 ：" + JsonUtil.toJson(result));
 		}
 		

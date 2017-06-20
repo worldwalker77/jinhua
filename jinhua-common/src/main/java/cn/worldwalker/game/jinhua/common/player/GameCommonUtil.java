@@ -44,7 +44,7 @@ public class GameCommonUtil {
 	}
 	
 	/**
-	 * 设置玩家解散状态
+	 * 设置玩家在线状态
 	 * @param playerList
 	 * @param playerId
 	 * @param statusEnum
@@ -52,7 +52,7 @@ public class GameCommonUtil {
 	public static void setOnlineStatus(List<PlayerInfo> playerList, Long playerId, OnlineStatusEnum onlineStatusEnum){
 		for(PlayerInfo player : playerList){
 			if (player.getPlayerId().equals(playerId)) {
-				player.setDissolveStatus(onlineStatusEnum.status);
+				player.setOnlineStatus(onlineStatusEnum.status);
 			}
 		}
 	}

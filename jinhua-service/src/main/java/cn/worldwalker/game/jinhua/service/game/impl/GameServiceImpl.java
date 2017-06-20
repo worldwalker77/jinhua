@@ -968,9 +968,9 @@ public class GameServiceImpl implements GameService {
 					newPlayer.setRoomCardNum(player.getRoomCardNum());
 					newPlayer.setLevel(player.getLevel());
 					newPlayer.setStatus(player.getStatus());
-					/**如果是已看牌，则要给此玩家返回牌型*/
-					if (PlayerStatusEnum.watch.status.equals(player.getStatus())) {
-						
+					/**如果是已看牌，并且是当前请求刷新的用户，则要给此玩家返回牌型*/
+					if (PlayerStatusEnum.watch.status.equals(player.getStatus()) && player.getPlayerId().equals(msg.getPlayerId())) {
+						newPlayer.setCardList(player.getCardList());
 					}
 					
 					newPlayer.setTotalScore(player.getTotalScore());
@@ -995,6 +995,9 @@ public class GameServiceImpl implements GameService {
 					newPlayer.setLevel(player.getLevel());
 					newPlayer.setCurScore(player.getCurScore());
 					newPlayer.setStatus(player.getStatus());
+					if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
+						newPlayer.setCardList(player.getCardList());
+					}
 					newRoomInfo.getPlayerList().add(newPlayer);
 				}
 				result.setMsgType(MsgTypeEnum.refreshRoom.msgType);
@@ -1015,9 +1018,13 @@ public class GameServiceImpl implements GameService {
 					newPlayer.setStatus(player.getStatus());
 					
 					newPlayer.setTotalScore(player.getTotalScore());
+					newPlayer.setCurScore(player.getCurScore());
 					newPlayer.setMaxCardType(player.getMaxCardType());
 					newPlayer.setWinTimes(player.getWinTimes());
 					newPlayer.setLoseTimes(player.getLoseTimes());
+					if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
+						newPlayer.setCardList(player.getCardList());
+					}
 					newRoomInfo.getPlayerList().add(newPlayer);
 				}
 				result.setMsgType(MsgTypeEnum.refreshRoom.msgType);
