@@ -40,6 +40,11 @@ public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 					String[] playerIds = new String[1];
 					playerIds[0] = playerIdStr;
 					RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(Long.valueOf(roomIdStr));
+					/**如果无房间信息，则说明可能其他离线玩家已经将房间删除，不需要再推送消息给其他玩家*/
+					if (null == roomInfo) {
+						SessionContainer.cleanPlayerAndRoomInfo(Long.valueOf(roomIdStr), playerIds);
+						return;
+					}
 					System.out.println("roomInfo : " + JsonUtil.toJson(roomInfo));
 					List<PlayerInfo> playerList = roomInfo.getPlayerList();
 					Result result = new Result();

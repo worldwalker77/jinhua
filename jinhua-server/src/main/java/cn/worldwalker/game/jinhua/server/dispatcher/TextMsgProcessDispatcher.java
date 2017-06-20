@@ -3,6 +3,7 @@ package cn.worldwalker.game.jinhua.server.dispatcher;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,11 +39,30 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 		try {
 			/**除了进入大厅及创建房间之外，其他的请求需要按照房间号对请求进行排队，防止并发情况下数据状态错乱*/
 			if (!MsgTypeEnum.entryHall.equals(msgTypeEnum) && !MsgTypeEnum.createRoom.equals(msgTypeEnum)) {
-				lock = RoomLockContainer.getLockByRoomId(msg.getRoomId());
-				if (lock == null) {
-					SessionContainer.sendErrorMsg(ctx, ResultCode.ROOM_NOT_EXIST, msgType, request);
+				if (MsgTypeEnum.refreshRoom.equals(msgTypeEnum) && msg.getRoomId() != null) {
+					lock = RoomLockContainer.getLockByRoomId(msg.getRoomId());
+					if (lock == null) {
+						/**如果是刷新房间，并且没有房间号，则可能是*/
+						synchronized (TextMsgProcessDispatcher.class) {
+							if (lock == null) {
+								lock = new ReentrantLock();
+								RoomLockContainer.setLockByRoomId(msg.getRoomId(), lock);
+							}
+						}
+					}
+					/**刷新接口并且roomId为空，则说明是在 大厅，直接返回进入大厅消息*/
+				}else if(MsgTypeEnum.refreshRoom.equals(msgTypeEnum) && msg.getRoomId() == null){
+					SessionContainer.addChannel(ctx, msg.getPlayerId());
+					SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), new Result(0, null, MsgTypeEnum.entryHall.msgType));
 					return;
+				}else{
+					lock = RoomLockContainer.getLockByRoomId(msg.getRoomId());
+					if (null == lock) {
+						SessionContainer.sendErrorMsg(ctx, ResultCode.ROOM_NOT_EXIST, msgType, request);
+						return;
+					}
 				}
+				
 				lock.lock();
 			}
 			switch (msgTypeEnum) {

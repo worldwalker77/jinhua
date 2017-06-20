@@ -17,6 +17,8 @@ public class Constant {
 	public final static String jinhuaLogInfoFuse = "jinhua_log_info_fuse";
 	/**登录切换开关*/
 	public final static String jinhuaLoginFuse = "jinhua_login_fuse";
+	/**roomLockPrefix*/
+	public final static String jinhuaRoomLockPrefix = "jinhua_room_lock_prefix_";
 	
 	
 	/**底注*/

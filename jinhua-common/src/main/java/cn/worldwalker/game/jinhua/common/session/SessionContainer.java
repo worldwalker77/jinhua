@@ -17,11 +17,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import redis.clients.jedis.Jedis;
 import cn.worldwalker.game.jinhua.common.constant.Constant;
 import cn.worldwalker.game.jinhua.common.player.GameCommonUtil;
 import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
+import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate.JedisAction;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.OnlineStatusEnum;
@@ -221,6 +223,71 @@ public class SessionContainer {
 	public void setJedisTemplate(JedisTemplate jedisTemplate) {
 		SessionContainer.jedisTemplate = jedisTemplate;
 	}
+	 
+	 public static synchronized boolean  isRunning(Long roomId) {
+        try {
+            long ttl = getKeyTtl(roomId);
+
+            if (ttl > 30 || ttl < 0) { //TTL 可能返回-1 -2
+                unlock(roomId); // 防呆,防止失效时间没设置成功
+            }
+
+            if (jedisTemplate.setnx(getRoomLockKey(roomId), "1")) {
+                expire(getRoomLockKey(roomId), 30);
+                
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+        	log.error(getRoomLockKey(roomId) + " error",e);
+            return false;
+        }
+    }
+	 
+	 public static  void unlock(Long roomId) {
+	        try {
+	        	String s=jedisTemplate.get(String.valueOf(roomId));
+	            if (s != null) {
+	                jedisTemplate.del(Constant.jinhuaRoomLockPrefix + roomId);
+
+	            }
+	        } catch (Exception e) {
+	        	log.error("unlock error",e);
+	            jedisTemplate.del(Constant.jinhuaRoomLockPrefix + roomId);
+	        }
+	    }
+	 public static  Boolean expire(final String key, final int timeOut) {
+	        return jedisTemplate.execute(new JedisTemplate.JedisAction<Boolean>() {
+
+	            @Override
+	            public Boolean action(Jedis jedis) {
+	                int maxRetry = 5;
+	                for (int i = 0; i < maxRetry; i++) {
+
+	                    if (jedis.expire(key, timeOut) == 1l) {
+	                        return true;
+
+	                    }
+	                }
+	                log.error(" expire retry 5 times failure");
+	                return false;
+	            }
+	        });
+	    }
+	 
+	 public static  long getKeyTtl(final Long roomId ) {
+			return jedisTemplate.execute(new JedisAction<Long>() {
+
+				@Override
+				public Long action(Jedis jedis) {
+					return jedis.ttl(getRoomLockKey(roomId));
+				}
+			});
+		}
+	 
+	 public static  String getRoomLockKey(Long roomId){
+		 return Constant.jinhuaRoomLockPrefix + roomId;
+	 }
 
 	public static void main(String[] args) {
 		Map<String, Long> map = new HashMap<String, Long>();
