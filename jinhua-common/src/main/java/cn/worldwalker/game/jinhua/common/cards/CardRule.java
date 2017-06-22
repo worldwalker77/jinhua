@@ -22,7 +22,8 @@ public class CardRule {
 			return CardTypeEnum.BOMB.cardType;
 		}
 		/**同花顺*/
-		if (card1.getCardValue().equals(card0.getCardValue() + 1) && card2.getCardValue().equals(card1.getCardValue() + 1)
+		if ((card1.getCardValue().equals(card0.getCardValue() + 1) && card2.getCardValue().equals(card1.getCardValue() + 1)
+			|| card0.getCardValue() == 14 && card1.getCardValue() == 2 && card2.getCardValue() == 3)
 			&& card1.getCardSuit().equals(card0.getCardSuit()) && card2.getCardSuit().equals(card1.getCardSuit())) {
 			return CardTypeEnum.STRAIGHT.cardType;
 		}
@@ -31,7 +32,8 @@ public class CardRule {
 			return CardTypeEnum.JINHUA.cardType;
 		}
 		/**普通顺子*/
-		if (card1.getCardValue().equals(card0.getCardValue() + 1) && card2.getCardValue().equals(card1.getCardValue() + 1)) {
+		if (card1.getCardValue().equals(card0.getCardValue() + 1) && card2.getCardValue().equals(card1.getCardValue() + 1)
+			|| card0.getCardValue() == 14 && card1.getCardValue() == 2 && card2.getCardValue() == 3) {
 			return CardTypeEnum.STRAIGHT.cardType;
 		}
 		/**对子*/
@@ -63,6 +65,17 @@ public class CardRule {
 						}
 					}
 				}
+			}
+		}
+		/**处理顺子123这种特殊情况*/
+		for(List<Card> cards : playerCards){
+			Card card0 = cards.get(0);
+			Card card1 = cards.get(1);
+			Card card2 = cards.get(2);
+			if (card0.getCardValue() == 2 && card1.getCardValue() == 3 && card2.getCardValue() == 14) {
+				cards.set(2, card1);
+				cards.set(1, card0);
+				cards.set(0, card2);
 			}
 		}
 	}
