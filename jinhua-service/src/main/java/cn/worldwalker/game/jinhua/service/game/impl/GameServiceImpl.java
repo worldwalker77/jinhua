@@ -357,6 +357,7 @@ public class GameServiceImpl implements GameService {
 				player.setTotalScore(0);
 				player.setWinTimes(0);
 				player.setLoseTimes(0);
+				player.setCurStakeScore(0);
 				/**设置每个玩家的解散房间状态为不同意解散，后面大结算返回大厅的时候回根据此状态判断是否解散房间*/
 				player.setDissolveStatus(DissolveStatusEnum.disagree.status);
 			}
