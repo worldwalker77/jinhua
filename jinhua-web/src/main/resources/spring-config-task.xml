@@ -16,8 +16,11 @@ http://www.springframework.org/schema/task/spring-task-3.0.xsd
     
     <bean id="roomInfoCleanJob" class="cn.worldwalker.game.jinhua.service.game.job.RoomInfoCleanJob">  
     </bean>
+    
+    <bean id="roomCardOperationFailProcessJob" class="cn.worldwalker.game.jinhua.service.game.job.RoomCardOperationFailProcessJob">  
+    </bean>
 	
-	<task:scheduler id="scheduler" pool-size="2"/>  
+	<task:scheduler id="scheduler" pool-size="3"/>  
 	
     <task:scheduled-tasks scheduler="scheduler">
     	<task:scheduled ref="offlinePlayerCleanJob" method="doTask" cron="0 0/5 * * * ?"/>
@@ -25,6 +28,10 @@ http://www.springframework.org/schema/task/spring-task-3.0.xsd
     
     <task:scheduled-tasks scheduler="scheduler">
     	<task:scheduled ref="roomInfoCleanJob" method="doTask" cron="0 0 6 * * ?"/>
+    </task:scheduled-tasks>
+    
+    <task:scheduled-tasks scheduler="scheduler">
+    	<task:scheduled ref="roomCardOperationFailProcessJob" method="doTask" cron="0 0/10 * * * ?"/>
     </task:scheduled-tasks>
      
 </beans>

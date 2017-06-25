@@ -1,5 +1,7 @@
 package cn.worldwalker.game.jinhua.domain.game;
 
+import java.util.List;
+
 public class Msg {
 	private Long roomId;
 	private Long playerId;
@@ -12,6 +14,13 @@ public class Msg {
 	private Integer refreshType;//刷新类型 1，断线重连刷新  2 消息id不连续刷新
 	private Integer chatType;//聊天消息类型 1 文本 2 表情 3语音 4图片
 	private String chatMsg;//消息
+	private String feedBack;
+	private String mobilePhone;
+	private Integer feedBackType;
+	
+	private Integer noticeType;
+	private String noticeContent;
+	private List<Long> noticePlayerList;
 	public Long getRoomId() {
 		return roomId;
 	}
@@ -77,6 +86,42 @@ public class Msg {
 	}
 	public void setChatMsg(String chatMsg) {
 		this.chatMsg = chatMsg;
+	}
+	public String getMobilePhone() {
+		return mobilePhone;
+	}
+	public void setMobilePhone(String mobilePhone) {
+		this.mobilePhone = mobilePhone;
+	}
+	public Integer getFeedBackType() {
+		return feedBackType;
+	}
+	public void setFeedBackType(Integer feedBackType) {
+		this.feedBackType = feedBackType;
+	}
+	public String getFeedBack() {
+		return feedBack;
+	}
+	public void setFeedBack(String feedBack) {
+		this.feedBack = feedBack;
+	}
+	public Integer getNoticeType() {
+		return noticeType;
+	}
+	public void setNoticeType(Integer noticeType) {
+		this.noticeType = noticeType;
+	}
+	public String getNoticeContent() {
+		return noticeContent;
+	}
+	public void setNoticeContent(String noticeContent) {
+		this.noticeContent = noticeContent;
+	}
+	public List<Long> getNoticePlayerList() {
+		return noticePlayerList;
+	}
+	public void setNoticePlayerList(List<Long> noticePlayerList) {
+		this.noticePlayerList = noticePlayerList;
 	}
 	
 }

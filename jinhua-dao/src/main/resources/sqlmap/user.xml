@@ -24,8 +24,9 @@
 	</select>
 	
 	<update id="deductRoomCard"  parameterType = "map">
-		update t_user set room_card_num = room_card_num - #{deductNum}, update_time = now() where id = #{id} and update_time = #{updateTime}
-	    select room_card_num, updateTime from t_user where id = #{id}
+		update t_user 
+		set room_card_num = room_card_num - #{deductNum}, update_time = now() 
+		where id = #{id} and room_card_num = #{roomCardNum} and update_time = #{updateTime}
 	</update>
 	
     <insert id="insertUser" parameterType="cn.worldwalker.game.jinhua.domain.model.UserModel">  

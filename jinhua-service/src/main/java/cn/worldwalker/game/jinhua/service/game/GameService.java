@@ -50,4 +50,12 @@ public interface GameService {
 	
 	public Result queryOtherPlayerInfo(ChannelHandlerContext ctx, GameRequest request);
 	
+	public Result userRecord(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result userFeedback(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result updatePlayerInfo(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result notice(ChannelHandlerContext ctx, GameRequest request);
+	
 }

@@ -25,7 +25,12 @@ public enum MsgTypeEnum {
 	queryPlayerInfo(21, "查看玩家信息"),
 	dissolveRoomCausedByOffline(22, "玩家离线超过20分钟，解散房间"),
 	chatMsg(23, "聊天消息"),
-	heartBeat(24, "心跳检测");
+	heartBeat(24, "心跳检测"),
+	userRecord(25, "玩家战绩"),
+	userFeedback(26, "用户反馈"),
+	updatePlayerInfo(27, "玩家信息更新"),
+	notice(28, "公告通知"),
+	roomCardNumUpdate(29, "房卡数更新");
 	
 	public int msgType;
 	public String desc;

@@ -1,4 +1,4 @@
-package cn.worldwalker.game.jinhua.common.session;
+package cn.worldwalker.game.jinhua.service.session;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 
 import redis.clients.jedis.Jedis;
 import cn.worldwalker.game.jinhua.common.constant.Constant;
-import cn.worldwalker.game.jinhua.common.player.GameCommonUtil;
 import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
@@ -33,6 +32,7 @@ import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
 import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
+import cn.worldwalker.game.jinhua.service.game.impl.CommonService;
 
 @Component
 public class SessionContainer {
@@ -40,6 +40,8 @@ public class SessionContainer {
 	private static final Log log = LogFactory.getLog(SessionContainer.class);
 	
 	private static JedisTemplate jedisTemplate;
+	
+	private static CommonService commonService;
 	
 	private static Map<Long, Channel> sessionMap = new ConcurrentHashMap<Long, Channel>();
 	
@@ -111,6 +113,41 @@ public class SessionContainer {
 		return msgId;
 	}
 	
+	public static void sendTextMsgByPlayerIdList(List<Long> playerIdList, Result result){
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		
+		for(Long playerId : playerIdList){
+			Channel channel = getChannel(playerId);
+			if (null != channel) {
+				try {
+					channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
+				} catch (Exception e) {
+					log.error("sendTextMsgByPlayerIdList error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
+				}
+			}
+		}
+	}
+	
+	public static void sendTextMsgToAllPlayer(Result result){
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		Set<Entry<Long, Channel>> set = sessionMap.entrySet();
+		for(Entry<Long, Channel> entry : set){
+			Long playerId = entry.getKey();
+			Channel channel = entry.getValue();
+			if (null != channel) {
+				try {
+					channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
+				} catch (Exception e) {
+					log.error("sendTextMsgByPlayerIdList error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
+				}
+			}
+		}
+	}
+	
 	public static void sendTextMsg(ChannelHandlerContext ctx, Result result){
 		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse)) && !MsgTypeEnum.heartBeat.equals(MsgTypeEnum.getMsgTypeEnumByType(result.getMsgType()))) {
 			log.info("返回 ：" + JsonUtil.toJson(result));
@@ -161,7 +198,7 @@ public class SessionContainer {
 				/**设置当前玩家为离线状态并通知其他玩家此玩家离线*/
 				RoomInfo roomInfo = getRoomInfoFromRedis(Long.valueOf(roomId));
 				List<PlayerInfo> playerList = roomInfo.getPlayerList();
-				GameCommonUtil.setOnlineStatus(playerList, playerId, OnlineStatusEnum.offline);
+				commonService.setOnlineStatus(playerList, playerId, OnlineStatusEnum.offline);
 				setRoomInfoToRedis(Long.valueOf(roomId), roomInfo);
 				
 				Result result = new Result();
@@ -169,7 +206,7 @@ public class SessionContainer {
 				Map<String, Object> data = new HashMap<String, Object>();
 				data.put("playerId", playerId);
 				result.setData(data);
-				sendTextMsgByPlayerIdSet(Long.valueOf(roomId), GameCommonUtil.getPlayerIdSetWithoutSelf(playerList, playerId), result);
+				sendTextMsgByPlayerIdSet(Long.valueOf(roomId), commonService.getPlayerIdSetWithoutSelf(playerList, playerId), result);
 			}
 		}
 	}
@@ -220,8 +257,12 @@ public class SessionContainer {
 	public void setJedisTemplate(JedisTemplate jedisTemplate) {
 		SessionContainer.jedisTemplate = jedisTemplate;
 	}
-	 
-	 public static synchronized boolean  isRunning(Long roomId) {
+	 @Autowired(required = true)
+	public void setCommonService(CommonService commonService) {
+		SessionContainer.commonService = commonService;
+	}
+
+	public static synchronized boolean  isRunning(Long roomId) {
         try {
             long ttl = getKeyTtl(roomId);
 

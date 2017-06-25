@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.worldwalker.game.jinhua.dao.log.UserRecordDao">
+	
+	<resultMap id="userRecordResultMap" type="cn.worldwalker.game.jinhua.domain.model.UserRecordModel" >
+		<id column="id" property="id"/>
+		<result column="player_id" property="playerId"/>
+		<result column="room_id" property="roomId"/>
+		<result column="score" property="score"/>
+		<result column="create_time" property="createTime"/>
+	</resultMap>
+	
+	 <insert id="insertRecord" parameterType="cn.worldwalker.game.jinhua.domain.model.UserRecordModel">  
+	     <!-- 使用这种方式要注意，resultType是要设置的，否则将抛异常，该值对应的User类中的主键类型 -->  
+	     <!-- keyProperty对应的是UserModel类中的主键名，假设取名为user_id，则这边也要改成user_id -->  
+	     <selectKey keyProperty="id" resultType="Long">  
+	         select LAST_INSERT_ID()  
+	     </selectKey>  
+	     insert into t_user_record( 
+	     					player_id, 
+	     					room_id,
+	     					score, 
+	     					create_time) 
+	     			values(  
+	     					#{playerId}, 
+	     					#{roomId}, 
+	     					#{score},
+	     					#{createTime})    
+    </insert> 
+    <insert id="batchInsertRecord" parameterType="java.util.List">  
+        insert into t_user_record ( 
+	     					player_id, 
+	     					room_id,
+	     					score, 
+	     					create_time)  
+        values  
+        <foreach collection="list" item="item" index="index" separator="," >  
+            (#{item.playerId},#{item.roomId},#{item.score},#{item.createTime})  
+        </foreach>  
+    </insert>  
+    <select id="getUserRecord"  parameterType = "Long" resultMap="userRecordResultMap">
+	    select id, player_id, room_id, score, create_time from t_user_record where player_id = #{playerId} order by create_time desc,score desc limit 20
+	</select>
+</mapper>
+
+

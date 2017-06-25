@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import cn.worldwalker.game.jinhua.common.constant.Constant;
-import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
@@ -15,6 +14,7 @@ import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
 import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
+import cn.worldwalker.game.jinhua.service.session.SessionContainer;
 
 public abstract class ProcessDisPatcher {
 	

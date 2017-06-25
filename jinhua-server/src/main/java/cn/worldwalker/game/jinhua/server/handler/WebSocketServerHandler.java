@@ -28,12 +28,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import cn.worldwalker.game.jinhua.common.constant.Constant;
-import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 import cn.worldwalker.game.jinhua.server.dispatcher.TextMsgProcessDispatcher;
+import cn.worldwalker.game.jinhua.service.session.SessionContainer;
 @Sharable
 @Service
 public class WebSocketServerHandler  extends SimpleChannelInboundHandler<Object>{

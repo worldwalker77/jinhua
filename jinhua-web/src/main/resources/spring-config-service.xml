@@ -9,4 +9,6 @@
 	default-autowire="byName">
 	<!--  
 	-->
+	<bean id="commonService" class="cn.worldwalker.game.jinhua.service.game.impl.CommonService">
+	</bean>
 </beans>

@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import cn.worldwalker.game.jinhua.common.roomlocks.RoomLockContainer;
-import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
@@ -19,6 +18,7 @@ import cn.worldwalker.game.jinhua.domain.game.Msg;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 import cn.worldwalker.game.jinhua.service.game.GameService;
+import cn.worldwalker.game.jinhua.service.session.SessionContainer;
 
 @Service
 public class TextMsgProcessDispatcher extends ProcessDisPatcher{
@@ -194,6 +194,18 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 					break;
 				case heartBeat:
 					SessionContainer.sendTextMsg(ctx, new Result(0, null, MsgTypeEnum.heartBeat.msgType));
+					break;
+					
+				case userRecord:
+					gameService.userRecord(ctx, request);
+					break;
+					
+				case userFeedback:
+					gameService.userFeedback(ctx, request);
+					break;
+					
+				case updatePlayerInfo:
+					gameService.updatePlayerInfo(ctx, request);
 					break;
 					
 				default:

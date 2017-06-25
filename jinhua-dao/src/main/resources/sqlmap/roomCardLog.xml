@@ -7,12 +7,10 @@
 	<resultMap id="roomCardLogResultMap" type="cn.worldwalker.game.jinhua.domain.model.RoomCardLogModel" >
 		<id column="id" property="id"/>
 		<result column="player_id" property="playerId"/>
-		<result column="nick_name" property="nickName"/>
 		<result column="pre_room_card_num" property="preRoomCardNum"/>
 		<result column="cur_room_card_num" property="curRoomCardNum"/>
 		<result column="diff_room_card_num" property="diffRoomCardNum"/>
 		<result column="operator_id" property="operatorId"/>
-		<result column="operator_name" property="operatorName"/>
 		<result column="operator_type" property="operatorType"/>
 		<result column="create_time" property="createTime"/>
 	</resultMap>
@@ -25,21 +23,17 @@
 	     </selectKey>  
 	     insert into t_user_room_card_log( 
 	     					player_id, 
-	     					nick_name,
 	     					pre_room_card_num,
 	     					cur_room_card_num, 
 	     					operator_id, 
-	     					operator_name,
 	     					operator_type,
 	     					update_time) 
 	     			values(  
 	     					#{player_id}, 
-	     					#{nick_name}, 
-	     					#{pre_room_card_num}, 
-	     					#{cur_room_card_num},
-	     					#{operator_id}, 
-	     					#{operator_name},
-	     					#{operator_type},
+	     					#{preRoomCardNum}, 
+	     					#{curRoomCardNum},
+	     					#{operatorId}, 
+	     					#{operatorType},
 	     					now())    
     </insert> 
     

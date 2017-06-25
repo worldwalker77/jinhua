@@ -8,8 +8,6 @@ public class RoomCardLogModel {
 	
 	private Long playerId;
 	
-	private String nickName;
-	
 	private Integer preRoomCardNum;
 	
 	private Integer curRoomCardNum;
@@ -17,8 +15,6 @@ public class RoomCardLogModel {
 	private Integer diffRoomCardNum;
 	
 	private Long operatorId;
-	
-	private String operatorName;
 	
 	private Integer operatorType;
 	
@@ -38,14 +34,6 @@ public class RoomCardLogModel {
 
 	public void setPlayerId(Long playerId) {
 		this.playerId = playerId;
-	}
-
-	public String getNickName() {
-		return nickName;
-	}
-
-	public void setNickName(String nickName) {
-		this.nickName = nickName;
 	}
 
 	public Integer getPreRoomCardNum() {
@@ -78,14 +66,6 @@ public class RoomCardLogModel {
 
 	public void setOperatorId(Long operatorId) {
 		this.operatorId = operatorId;
-	}
-
-	public String getOperatorName() {
-		return operatorName;
-	}
-
-	public void setOperatorName(String operatorName) {
-		this.operatorName = operatorName;
 	}
 
 	public Integer getOperatorType() {

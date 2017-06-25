@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
-import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.domain.Test;
 import cn.worldwalker.game.jinhua.domain.result.Result;
+import cn.worldwalker.game.jinhua.service.session.SessionContainer;
 import cn.worldwalker.game.jinhua.service.test.TestService;
 
 @Controller

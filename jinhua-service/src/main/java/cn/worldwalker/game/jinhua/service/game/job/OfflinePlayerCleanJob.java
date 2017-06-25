@@ -6,18 +6,22 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import cn.worldwalker.game.jinhua.common.constant.Constant;
-import cn.worldwalker.game.jinhua.common.player.GameCommonUtil;
-import cn.worldwalker.game.jinhua.common.session.SessionContainer;
 import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.game.PlayerInfo;
 import cn.worldwalker.game.jinhua.domain.game.RoomInfo;
 import cn.worldwalker.game.jinhua.domain.result.Result;
+import cn.worldwalker.game.jinhua.service.game.impl.CommonService;
+import cn.worldwalker.game.jinhua.service.session.SessionContainer;
 
 
 public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 	 
+	@Autowired
+	private CommonService commonService;
 	/**
 	 * 清除游戏房间中离线超过20分钟的玩家信息及房间信息
 	 */
@@ -52,7 +56,7 @@ public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 					Map<String, Object> data = new HashMap<String, Object>();
 					data.put("playerId", playerIdStr);
 					result.setData(data);
-					SessionContainer.sendTextMsgByPlayerIdSet(Long.valueOf(roomIdStr), GameCommonUtil.getPlayerIdSetWithoutSelf(playerList, Long.valueOf(playerIdStr)), result);
+					SessionContainer.sendTextMsgByPlayerIdSet(Long.valueOf(roomIdStr), commonService.getPlayerIdSetWithoutSelf(playerList, Long.valueOf(playerIdStr)), result);
 					SessionContainer.cleanPlayerAndRoomInfo(Long.valueOf(roomIdStr), playerIds);
 				}
 			}
