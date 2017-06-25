@@ -1012,6 +1012,7 @@ public class GameServiceImpl implements GameService {
 					newPlayer.setOrder(player.getOrder());
 					newPlayer.setRoomCardNum(player.getRoomCardNum());
 					newPlayer.setLevel(player.getLevel());
+					newPlayer.setTotalScore(player.getTotalScore());
 					newPlayer.setCurScore(player.getCurScore());
 					newPlayer.setStatus(player.getStatus());
 					if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
