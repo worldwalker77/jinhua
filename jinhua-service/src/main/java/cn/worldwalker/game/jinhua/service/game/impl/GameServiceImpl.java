@@ -33,6 +33,7 @@ import cn.worldwalker.game.jinhua.domain.enums.DissolveStatusEnum;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.OnlineStatusEnum;
+import cn.worldwalker.game.jinhua.domain.enums.PayTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.PlayerStatusEnum;
 import cn.worldwalker.game.jinhua.domain.enums.RoomStatusEnum;
 import cn.worldwalker.game.jinhua.domain.game.Card;
@@ -176,6 +177,7 @@ public class GameServiceImpl implements GameService {
 		Msg msg = request.getMsg();
 		
 		/**校验房卡数量是否足够*/
+		//TODO
 //		ResultCode resultCode = commonService.roomCardCheck(msg.getPlayerId(), msg.getPayType(), msg.getTotalGames());
 //		if (!ResultCode.SUCCESS.equals(resultCode)) {
 //			SessionContainer.sendErrorMsg(ctx, resultCode, MsgTypeEnum.createRoom.msgType, request);
@@ -274,11 +276,14 @@ public class GameServiceImpl implements GameService {
 		}
 		RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(roomId);
 		
-		/**校验房卡数量是否足够*/
-//		ResultCode resultCode = commonService.roomCardCheck(msg.getPlayerId(), roomInfo.getPayType(), roomInfo.getTotalGames());
-//		if (!ResultCode.SUCCESS.equals(resultCode)) {
-//			SessionContainer.sendErrorMsg(ctx, resultCode, MsgTypeEnum.entryRoom.msgType, request);
-//			return result;
+		/**如果是aa支付，则校验房卡数量是否足够*/
+		//TODO
+//		if (PayTypeEnum.AAPay.type.equals(roomInfo.getPayType())) {
+//			ResultCode resultCode = commonService.roomCardCheck(msg.getPlayerId(), roomInfo.getPayType(), roomInfo.getTotalGames());
+//			if (!ResultCode.SUCCESS.equals(resultCode)) {
+//				SessionContainer.sendErrorMsg(ctx, resultCode, MsgTypeEnum.entryRoom.msgType, request);
+//				return result;
+//			}
 //		}
 		
 		/**如果不是刚开始游戏准备阶段，则不允许加入房间*/

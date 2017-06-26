@@ -213,7 +213,8 @@ public class CommonService {
 		}
 		/**如果是第一局结束，则扣除房卡;扣除房卡异常不影响游戏进行，会将异常数据放入redis中，由定时任务进行补偿扣除*/
 		if (roomInfo.getCurGame() == 1) {
-			deductRoomCard(roomInfo);
+			//TODO
+//			deductRoomCard(roomInfo);
 		}
 	}
 	
@@ -332,6 +333,11 @@ public class CommonService {
 		if (CollectionUtils.isEmpty(playerList)) {
 			return;
 		}
+		List<String> nickNameList = new ArrayList<String>();
+		for(PlayerInfo player : playerList){
+			nickNameList.add(player.getNickName());
+		}
+		String nickNames = JsonUtil.toJson(nickNameList);
 		List<UserRecordModel> modelList = new ArrayList<UserRecordModel>();
 		Date createTime = new Date();
 		for(PlayerInfo player : playerList){
@@ -339,6 +345,7 @@ public class CommonService {
 			model.setPlayerId(player.getPlayerId());
 			model.setRoomId(roomId);
 			model.setScore(player.getTotalScore());
+			model.setNickNames(nickNames);
 			model.setCreateTime(createTime);
 			modelList.add(model);
 		}
@@ -359,11 +366,7 @@ public class CommonService {
 		model.setMobilePhone(msg.getMobilePhone());
 		model.setFeedBack(msg.getFeedBack());
 		model.setType(msg.getFeedBackType());
-		try {
-			userFeedbackDao.insertFeedback(model);
-		} catch (Exception e) {
-			log.error("插入玩家反馈信息异常，msg:" + JsonUtil.toJson(msg), e);
-		}
+		userFeedbackDao.insertFeedback(model);
 	}
 	/**
 	 * 玩家房卡校验

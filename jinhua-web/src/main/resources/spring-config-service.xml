@@ -11,4 +11,6 @@
 	-->
 	<bean id="commonService" class="cn.worldwalker.game.jinhua.service.game.impl.CommonService">
 	</bean>
+	<bean id="transactionService" class="cn.worldwalker.game.jinhua.service.game.impl.TransactionServiceImpl">
+	</bean>
 </beans>

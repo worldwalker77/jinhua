@@ -12,6 +12,8 @@ public class UserRecordModel {
 	
 	private Integer score;
 	
+	private String nickNames;
+	
 	private Date createTime;
 
 	public Long getId() {
@@ -53,6 +55,14 @@ public class UserRecordModel {
 
 	public void setCreateTime(Date createTime) {
 		this.createTime = createTime;
+	}
+
+	public String getNickNames() {
+		return nickNames;
+	}
+
+	public void setNickNames(String nickNames) {
+		this.nickNames = nickNames;
 	}
 	
 }

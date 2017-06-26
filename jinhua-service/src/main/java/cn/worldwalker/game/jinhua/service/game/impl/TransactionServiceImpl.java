@@ -21,7 +21,6 @@ import cn.worldwalker.game.jinhua.domain.result.Result;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 import cn.worldwalker.game.jinhua.service.game.TransactionService;
 
-@Service
 public class TransactionServiceImpl implements TransactionService{
 	
 	private static final Log log = LogFactory.getLog(TransactionServiceImpl.class);

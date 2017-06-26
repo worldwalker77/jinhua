@@ -8,7 +8,7 @@
 		<id column="id" property="id"/>
 		<result column="player_id" property="playerId"/>
 		<result column="mobile_phone" property="mobilePhone"/>
-		<result column="feedback" property="feedback"/>
+		<result column="feed_back" property="feedBack"/>
 		<result column="type" property="type"/>
 		<result column="create_time" property="createTime"/>
 	</resultMap>
@@ -22,13 +22,13 @@
 	     insert into t_user_feedback( 
 	     					player_id, 
 	     					mobile_phone,
-	     					feedback, 
+	     					feed_back, 
 	     					type,
 	     					create_time) 
 	     			values(  
 	     					#{playerId}, 
 	     					#{mobilePhone}, 
-	     					#{feedback},
+	     					#{feedBack},
 	     					#{type},
 	     					now())    
     </insert> 

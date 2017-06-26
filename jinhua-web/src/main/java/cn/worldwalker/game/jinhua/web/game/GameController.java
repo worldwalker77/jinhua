@@ -1,15 +1,20 @@
 package cn.worldwalker.game.jinhua.web.game;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import cn.worldwalker.game.jinhua.common.constant.Constant;
+import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
@@ -49,7 +54,7 @@ public class GameController {
 	
 	@RequestMapping("notice")
 	@ResponseBody
-	public Result notice(Msg msg){
+	public Result notice(@RequestBody Msg msg){
 		Result result = new Result();
 		
 		if (null == msg || msg.getNoticeType() == null || StringUtils.isBlank(msg.getNoticeContent())) {
@@ -61,6 +66,13 @@ public class GameController {
 		request.setMsg(msg);
 		return gameService.notice(null, request);
 		
+	}
+	public static void main(String[] args) {
+		Msg msg = new Msg();
+		msg.setFeedBack("投诉建议测试");
+		msg.setMobilePhone("13006339011");
+		msg.setFeedBackType(1);
+		System.out.println(JsonUtil.toJson(msg));
 	}
 	
 }

@@ -38,7 +38,11 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 		Lock lock = null;
 		try {
 			/**除了进入大厅及创建房间之外，其他的请求需要按照房间号对请求进行排队，防止并发情况下数据状态错乱*/
-			if (!MsgTypeEnum.entryHall.equals(msgTypeEnum) && !MsgTypeEnum.createRoom.equals(msgTypeEnum) && !MsgTypeEnum.heartBeat.equals(msgTypeEnum)) {
+			if (!MsgTypeEnum.entryHall.equals(msgTypeEnum) 
+				&& !MsgTypeEnum.createRoom.equals(msgTypeEnum) 
+				&& !MsgTypeEnum.heartBeat.equals(msgTypeEnum)
+				&& !MsgTypeEnum.userFeedback.equals(msgTypeEnum)
+				&& !MsgTypeEnum.userRecord.equals(msgTypeEnum)) {
 				if (MsgTypeEnum.refreshRoom.equals(msgTypeEnum) && msg.getRoomId() != null) {
 					lock = RoomLockContainer.getLockByRoomId(msg.getRoomId());
 					if (lock == null) {

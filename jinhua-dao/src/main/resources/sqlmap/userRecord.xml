@@ -9,6 +9,7 @@
 		<result column="player_id" property="playerId"/>
 		<result column="room_id" property="roomId"/>
 		<result column="score" property="score"/>
+		<result column="nick_names" property="nickNames"/>
 		<result column="create_time" property="createTime"/>
 	</resultMap>
 	
@@ -22,26 +23,29 @@
 	     					player_id, 
 	     					room_id,
 	     					score, 
+	     					nick_names,
 	     					create_time) 
 	     			values(  
 	     					#{playerId}, 
 	     					#{roomId}, 
 	     					#{score},
+	     					#{nickNames},
 	     					#{createTime})    
     </insert> 
     <insert id="batchInsertRecord" parameterType="java.util.List">  
         insert into t_user_record ( 
 	     					player_id, 
 	     					room_id,
-	     					score, 
+	     					score,
+	     					nick_names, 
 	     					create_time)  
         values  
         <foreach collection="list" item="item" index="index" separator="," >  
-            (#{item.playerId},#{item.roomId},#{item.score},#{item.createTime})  
+            (#{item.playerId},#{item.roomId},#{item.score},#{item.nickNames},#{item.createTime})  
         </foreach>  
     </insert>  
     <select id="getUserRecord"  parameterType = "Long" resultMap="userRecordResultMap">
-	    select id, player_id, room_id, score, create_time from t_user_record where player_id = #{playerId} order by create_time desc,score desc limit 20
+	    select id, player_id, room_id, score, nick_names, create_time from t_user_record where player_id = #{playerId} order by create_time desc,score desc limit 20
 	</select>
 </mapper>
 
