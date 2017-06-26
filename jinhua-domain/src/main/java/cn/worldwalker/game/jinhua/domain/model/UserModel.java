@@ -14,6 +14,8 @@ public class UserModel {
 	
 	private String wxOpenId;
 	
+	private String unionid;
+	
 	private Integer roomCardNum;
 	
 	private Date createtime;
@@ -82,6 +84,14 @@ public class UserModel {
 
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+
+	public String getUnionid() {
+		return unionid;
+	}
+
+	public void setUnionid(String unionid) {
+		this.unionid = unionid;
 	}
 	
 }
