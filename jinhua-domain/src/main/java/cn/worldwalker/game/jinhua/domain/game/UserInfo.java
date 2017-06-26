@@ -19,6 +19,8 @@ public class UserInfo {
 	private String headImgUrl;
 	
 	private String remoteIp;
+	
+	private Integer roomCardNum;
 
 	public Long getPlayerId() {
 		return playerId;
@@ -90,6 +92,14 @@ public class UserInfo {
 
 	public void setRemoteIp(String remoteIp) {
 		this.remoteIp = remoteIp;
+	}
+
+	public Integer getRoomCardNum() {
+		return roomCardNum;
+	}
+
+	public void setRoomCardNum(Integer roomCardNum) {
+		this.roomCardNum = roomCardNum;
 	}
 	
 }

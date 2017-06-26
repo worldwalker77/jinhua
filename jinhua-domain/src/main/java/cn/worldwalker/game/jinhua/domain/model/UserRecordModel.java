@@ -1,6 +1,8 @@
 package cn.worldwalker.game.jinhua.domain.model;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class UserRecordModel {
 	
@@ -13,6 +15,8 @@ public class UserRecordModel {
 	private Integer score;
 	
 	private String nickNames;
+	
+	private List<String> nickNameList = new ArrayList<String>();
 	
 	private Date createTime;
 
@@ -63,6 +67,14 @@ public class UserRecordModel {
 
 	public void setNickNames(String nickNames) {
 		this.nickNames = nickNames;
+	}
+
+	public List<String> getNickNameList() {
+		return nickNameList;
+	}
+
+	public void setNickNameList(List<String> nickNameList) {
+		this.nickNameList = nickNameList;
 	}
 	
 }

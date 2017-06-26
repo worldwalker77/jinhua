@@ -125,6 +125,7 @@ public class GameServiceImpl implements GameService {
 		SessionContainer.setUserInfoToRedis(loginToken, userInfo);
 		userInfo.setHeadImgUrl("http://wx.qlogo.cn/mmopen/wibbRT31wkCR4W9XNicL2h2pgaLepmrmEsXbWKbV0v9ugtdibibDgR1ybONiaWFtVeVtYWGWhObRiaiaicMgw8zat8Y5p6YzQbjdstE2/0");
 		userInfo.setToken(loginToken);
+		userInfo.setRoomCardNum(10);
 		result.setData(userInfo);
 		return result;
 	}
@@ -1183,6 +1184,9 @@ public class GameServiceImpl implements GameService {
 		
 		Msg msg = request.getMsg();
 		List<UserRecordModel> list = commonService.getUserRecord(msg.getPlayerId());
+		for(UserRecordModel model : list){
+			model.setNickNameList(JsonUtil.toObject(model.getNickNames(), List.class));
+		}
 		result.setMsgType(MsgTypeEnum.userRecord.msgType);
 		result.setData(list);
 		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
