@@ -177,12 +177,12 @@ public class CommonService {
 			if (!player.getPlayerId().equals(curWinnerPlayer.getPlayerId())) {
 				player.setCurScore(player.getCurScore() - player.getCurTotalStakeScore() - 1);
 				curWinnerPlayer.setCurScore(curWinnerPlayer.getCurScore() + player.getCurTotalStakeScore() + 1);
-				player.setLoseTimes(player.getLoseTimes()==null?0:player.getLoseTimes() + 1);
+				player.setLoseTimes((player.getLoseTimes()==null?0:player.getLoseTimes()) + 1);
 				if (player.getCardType() > player.getMaxCardType()) {
 					player.setMaxCardType(player.getCardType());
 				}
 			}else{
-				curWinnerPlayer.setWinTimes(curWinnerPlayer.getWinTimes()==null?0:curWinnerPlayer.getWinTimes() + 1);
+				curWinnerPlayer.setWinTimes((curWinnerPlayer.getWinTimes()==null?0:curWinnerPlayer.getWinTimes()) + 1);
 				if (curWinnerPlayer.getCardType() > curWinnerPlayer.getMaxCardType()) {
 					curWinnerPlayer.setMaxCardType(curWinnerPlayer.getCardType());
 				}
@@ -190,7 +190,7 @@ public class CommonService {
 		}
 		/**计算每个玩家总得分*/
 		for(PlayerInfo player : playerList){
-			player.setTotalScore(player.getTotalScore()==null?0:player.getTotalScore() + player.getCurScore());
+			player.setTotalScore((player.getTotalScore()==null?0:player.getTotalScore()) + player.getCurScore());
 		}
 		
 		/**设置房间的总赢家*/
