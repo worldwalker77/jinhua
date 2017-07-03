@@ -58,4 +58,6 @@ public interface GameService {
 	
 	public Result notice(ChannelHandlerContext ctx, GameRequest request);
 	
+	public Result sendEmoticon(ChannelHandlerContext ctx, GameRequest request);
+	
 }

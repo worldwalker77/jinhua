@@ -212,6 +212,10 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 					gameService.updatePlayerInfo(ctx, request);
 					break;
 					
+				case sendEmoticon:
+					gameService.sendEmoticon(ctx, request);
+					break;
+					
 				default:
 					SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, msgType, request);
 					break;

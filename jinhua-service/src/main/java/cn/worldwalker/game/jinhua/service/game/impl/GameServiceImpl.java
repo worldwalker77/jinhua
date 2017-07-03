@@ -29,11 +29,11 @@ import cn.worldwalker.game.jinhua.common.utils.MD5Util;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.dao.user.UserDao;
 import cn.worldwalker.game.jinhua.domain.enums.CardTypeEnum;
+import cn.worldwalker.game.jinhua.domain.enums.ChatTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.DissolveStatusEnum;
 import cn.worldwalker.game.jinhua.domain.enums.GameTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.MsgTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.OnlineStatusEnum;
-import cn.worldwalker.game.jinhua.domain.enums.PayTypeEnum;
 import cn.worldwalker.game.jinhua.domain.enums.PlayerStatusEnum;
 import cn.worldwalker.game.jinhua.domain.enums.RoomStatusEnum;
 import cn.worldwalker.game.jinhua.domain.game.Card;
@@ -1169,6 +1169,15 @@ public class GameServiceImpl implements GameService {
 			return SessionContainer.sendErrorMsg(ctx, ResultCode.PLAYER_NOT_IN_ROOM, MsgTypeEnum.chatMsg.msgType, request);
 		}
 		result.setMsgType(MsgTypeEnum.chatMsg.msgType);
+		if (ChatTypeEnum.specialEmotion.type == msg.getChatType()) {
+			data.put("playerId", msg.getPlayerId());
+			data.put("otherPlayerId", msg.getOtherPlayerId());
+			data.put("chatMsg", msg.getChatMsg());
+			data.put("chatType", msg.getChatType());
+			SessionContainer.sendTextMsgByPlayerId(msg.getOtherPlayerId(), result);
+			return result;
+		}
+		
 		data.put("playerId", msg.getPlayerId());
 		data.put("chatMsg", msg.getChatMsg());
 		data.put("chatType", msg.getChatType());
@@ -1234,6 +1243,30 @@ public class GameServiceImpl implements GameService {
 			result.setCode(ResultCode.PARAM_ERROR.code);
 			result.setDesc(ResultCode.PARAM_ERROR.returnDesc);
 		}
+		return result;
+	}
+
+	@Override
+	public Result sendEmoticon(ChannelHandlerContext ctx, GameRequest request) {
+		Result result = new Result();
+		Map<String, Object> data = new HashMap<String, Object>();
+		result.setData(data);
+		
+		Msg msg = request.getMsg();
+		Long roomId = msg.getRoomId();
+		RoomInfo roomInfo = SessionContainer.getRoomInfoFromRedis(roomId);
+		if (null == roomInfo) {
+			return SessionContainer.sendErrorMsg(ctx, ResultCode.ROOM_NOT_EXIST, MsgTypeEnum.chatMsg.msgType, request);
+		}
+		List<PlayerInfo> playerList = roomInfo.getPlayerList();
+		if (!commonService.isExistPlayerInRoom(msg.getPlayerId(), playerList)) {
+			return SessionContainer.sendErrorMsg(ctx, ResultCode.PLAYER_NOT_IN_ROOM, MsgTypeEnum.chatMsg.msgType, request);
+		}
+		result.setMsgType(MsgTypeEnum.sendEmoticon.msgType);
+		data.put("playerId", msg.getPlayerId());
+		data.put("otherPlayerId", msg.getOtherPlayerId());
+		data.put("chatMsg", msg.getChatMsg());
+		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
 		return result;
 	}
 	
