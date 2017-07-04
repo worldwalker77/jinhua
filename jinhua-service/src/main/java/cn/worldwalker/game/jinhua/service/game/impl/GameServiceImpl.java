@@ -385,7 +385,7 @@ public class GameServiceImpl implements GameService {
 				/**设置每个玩家的解散房间状态为不同意解散，后面大结算返回大厅的时候回根据此状态判断是否解散房间*/
 				player.setDissolveStatus(DissolveStatusEnum.disagree.status);
 			}
-			roomInfo.setCurPlayerId(roomInfo.getRoomBankerId());
+			roomInfo.setCurPlayerId(commonService.getNextOperatePlayerIdByRoomBankerId(playerList, roomInfo.getRoomBankerId()));
 			roomInfo.setStatus(RoomStatusEnum.inGame.status);
 			roomInfo.setUpdateTime(new Date());
 			SessionContainer.setRoomInfoToRedis(roomId, roomInfo);

@@ -304,6 +304,25 @@ public class CommonService {
 		return nextOperatePlayerId;
 	}
 	
+	public Long getNextOperatePlayerIdByRoomBankerId(List<PlayerInfo> playerList, Long roomBankerId){
+		
+		int size = playerList.size();
+		Long nextOperatePlayerId = null;
+		for(int i = 0; i < size; i++ ){
+			PlayerInfo player = playerList.get(i);
+			if (player.getPlayerId().equals(roomBankerId)) {
+				if (i == size - 1) {
+					nextOperatePlayerId = playerList.get(0).getPlayerId();
+					break;
+				}else{
+					nextOperatePlayerId = playerList.get(i + 1).getPlayerId();
+					break;
+				}
+			}
+		}
+		return nextOperatePlayerId;
+	}
+	
 	public List<PlayerInfo> getAlivePlayerList(List<PlayerInfo> playerList){
 		List<PlayerInfo> alivePlayerList = new ArrayList<PlayerInfo>();
 		for(PlayerInfo player : playerList){
@@ -392,6 +411,7 @@ public class CommonService {
 		}
 		return ResultCode.SUCCESS;
 	}
+	
 	
 	
 }
