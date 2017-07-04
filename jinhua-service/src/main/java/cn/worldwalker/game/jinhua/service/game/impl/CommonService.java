@@ -172,8 +172,12 @@ public class CommonService {
 		roomInfo.setCurWinnerId(curWinnerPlayer.getPlayerId());
 		/**设置下一小局的庄家*/
 		roomInfo.setRoomBankerId(curWinnerPlayer.getPlayerId());
+		/**设置前一个玩家跟注分数为null*/
+		roomInfo.setPrePlayerStakeScore(null);
 		/**计算每个玩家当前局得分*/
 		for(PlayerInfo player : playerList){
+			/**玩家跟注次数置0*/
+			player.setStakeTimes(0);
 			if (!player.getPlayerId().equals(curWinnerPlayer.getPlayerId())) {
 				player.setCurScore(player.getCurScore() - player.getCurTotalStakeScore() - 1);
 				curWinnerPlayer.setCurScore(curWinnerPlayer.getCurScore() + player.getCurTotalStakeScore() + 1);
