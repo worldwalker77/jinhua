@@ -5,7 +5,7 @@
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
         <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="[%7r] %6p - %30.30c - %m \n"/>
+            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss} %-5p %c %m%n"/>
         </layout>
     </appender>
     <appender name="LOG-MAIN" class="org.apache.log4j.DailyRollingFileAppender">

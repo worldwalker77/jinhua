@@ -70,6 +70,25 @@ public class SessionContainer {
 		return false;
 	}
 	
+	public static boolean sendTextMsgByPlayerIds(Result result, Long... playerIds){
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
+			log.info("返回 ：" + JsonUtil.toJson(result));
+		}
+		for(Long playerId : playerIds){
+			Channel channel = getChannel(playerId);
+			if (null != channel) {
+				try {
+					channel.writeAndFlush(new TextWebSocketFrame(JsonUtil.toJson(result)));
+				} catch (Exception e) {
+					log.error("sendTextMsgByPlayerId error, playerId: " + playerId + ", result : " + JsonUtil.toJson(result), e);
+					return false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static boolean sendTextMsgByPlayerId(Long roomId, Long playerId, Result result){
 		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))) {
 			log.info("返回 ：" + JsonUtil.toJson(result));

@@ -378,9 +378,6 @@ public class GameServiceImpl implements GameService {
 				player.setStakeTimes(0);
 				player.setCurTotalStakeScore(0);
 				player.setCurScore(0);
-//				player.setTotalScore(0);
-//				player.setWinTimes(0);
-//				player.setLoseTimes(0);
 				player.setCurStakeScore(0);
 				/**设置每个玩家的解散房间状态为不同意解散，后面大结算返回大厅的时候回根据此状态判断是否解散房间*/
 				player.setDissolveStatus(DissolveStatusEnum.disagree.status);
@@ -1174,7 +1171,7 @@ public class GameServiceImpl implements GameService {
 			data.put("otherPlayerId", msg.getOtherPlayerId());
 			data.put("chatMsg", msg.getChatMsg());
 			data.put("chatType", msg.getChatType());
-			SessionContainer.sendTextMsgByPlayerId(msg.getOtherPlayerId(), result);
+			SessionContainer.sendTextMsgByPlayerIds(result, msg.getOtherPlayerId(), msg.getPlayerId());
 			return result;
 		}
 		
