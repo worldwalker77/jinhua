@@ -382,7 +382,8 @@ public class GameServiceImpl implements GameService {
 				/**设置每个玩家的解散房间状态为不同意解散，后面大结算返回大厅的时候回根据此状态判断是否解散房间*/
 				player.setDissolveStatus(DissolveStatusEnum.disagree.status);
 			}
-			roomInfo.setCurPlayerId(commonService.getNextOperatePlayerIdByRoomBankerId(playerList, roomInfo.getRoomBankerId()));
+			Long nextOperatePlayerId = commonService.getNextOperatePlayerIdByRoomBankerId(playerList, roomInfo.getRoomBankerId());
+			roomInfo.setCurPlayerId(nextOperatePlayerId);
 			roomInfo.setStatus(RoomStatusEnum.inGame.status);
 			roomInfo.setUpdateTime(new Date());
 			SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
@@ -392,8 +393,8 @@ public class GameServiceImpl implements GameService {
 			roomInfoMap.put("roomId", roomInfo.getRoomId());
 			roomInfoMap.put("roomOwnerId", roomInfo.getRoomOwnerId());
 			roomInfoMap.put("roomBankerId", roomInfo.getRoomBankerId());
-			/**庄家第一个说话*/
-			roomInfoMap.put("curPlayerId", roomInfo.getRoomBankerId());
+			/**庄家的下家第一个说话*/
+			roomInfoMap.put("curPlayerId", nextOperatePlayerId);
 			roomInfoMap.put("totalGames", roomInfo.getTotalGames());
 			roomInfoMap.put("curGame", roomInfo.getCurGame());
 			result.setData(roomInfoMap);
