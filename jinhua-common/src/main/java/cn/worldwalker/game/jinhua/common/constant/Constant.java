@@ -28,7 +28,7 @@ public class Constant {
 	/**押注的上限*/
 	public final static Integer stakeLimit = 10;
 	/**跟注次数上限*/
-	public final static Integer stakeTimesLimit = 6;
+	public final static Integer stakeTimesLimit = 30;
 	
 	 // // 第三方用户唯一凭证
     public static String appId = "wx7681f478b552345a";
