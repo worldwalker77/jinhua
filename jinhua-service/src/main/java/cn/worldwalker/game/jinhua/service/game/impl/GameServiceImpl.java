@@ -378,14 +378,12 @@ public class GameServiceImpl implements GameService {
 				player.setStakeTimes(0);
 				player.setCurTotalStakeScore(0);
 				player.setCurScore(0);
-//				player.setTotalScore(0);
-//				player.setWinTimes(0);
-//				player.setLoseTimes(0);
 				player.setCurStakeScore(0);
 				/**设置每个玩家的解散房间状态为不同意解散，后面大结算返回大厅的时候回根据此状态判断是否解散房间*/
 				player.setDissolveStatus(DissolveStatusEnum.disagree.status);
 			}
-			roomInfo.setCurPlayerId(roomInfo.getRoomBankerId());
+			Long nextOperatePlayerId = commonService.getNextOperatePlayerIdByRoomBankerId(playerList, roomInfo.getRoomBankerId());
+			roomInfo.setCurPlayerId(nextOperatePlayerId);
 			roomInfo.setStatus(RoomStatusEnum.inGame.status);
 			roomInfo.setUpdateTime(new Date());
 			SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
@@ -395,8 +393,8 @@ public class GameServiceImpl implements GameService {
 			roomInfoMap.put("roomId", roomInfo.getRoomId());
 			roomInfoMap.put("roomOwnerId", roomInfo.getRoomOwnerId());
 			roomInfoMap.put("roomBankerId", roomInfo.getRoomBankerId());
-			/**庄家第一个说话*/
-			roomInfoMap.put("curPlayerId", roomInfo.getRoomBankerId());
+			/**庄家的下家第一个说话*/
+			roomInfoMap.put("curPlayerId", nextOperatePlayerId);
 			roomInfoMap.put("totalGames", roomInfo.getTotalGames());
 			roomInfoMap.put("curGame", roomInfo.getCurGame());
 			result.setData(roomInfoMap);
@@ -1174,7 +1172,7 @@ public class GameServiceImpl implements GameService {
 			data.put("otherPlayerId", msg.getOtherPlayerId());
 			data.put("chatMsg", msg.getChatMsg());
 			data.put("chatType", msg.getChatType());
-			SessionContainer.sendTextMsgByPlayerId(msg.getOtherPlayerId(), result);
+			SessionContainer.sendTextMsgByPlayerIds(result, msg.getOtherPlayerId(), msg.getPlayerId());
 			return result;
 		}
 		
