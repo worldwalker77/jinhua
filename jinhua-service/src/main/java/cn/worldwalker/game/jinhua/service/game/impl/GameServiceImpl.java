@@ -1172,7 +1172,10 @@ public class GameServiceImpl implements GameService {
 			data.put("otherPlayerId", msg.getOtherPlayerId());
 			data.put("chatMsg", msg.getChatMsg());
 			data.put("chatType", msg.getChatType());
-			SessionContainer.sendTextMsgByPlayerIds(result, msg.getOtherPlayerId(), msg.getPlayerId());
+			List<Long> playerIdList = new ArrayList<Long>();
+			playerIdList.add(msg.getPlayerId());
+			playerIdList.add(msg.getOtherPlayerId());
+			SessionContainer.sendTextMsgByPlayerIdList(playerIdList, result);
 			return result;
 		}
 		
