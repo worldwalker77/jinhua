@@ -48,7 +48,7 @@ public interface GameService {
 	
 	public Result delRoomConfirmBeforeReturnHall(ChannelHandlerContext ctx, GameRequest request);
 	
-	public Result queryOtherPlayerInfo(ChannelHandlerContext ctx, GameRequest request);
+	public Result queryPlayerInfo(ChannelHandlerContext ctx, GameRequest request);
 	
 	public Result userRecord(ChannelHandlerContext ctx, GameRequest request);
 	
@@ -59,5 +59,7 @@ public interface GameService {
 	public Result notice(ChannelHandlerContext ctx, GameRequest request);
 	
 	public Result sendEmoticon(ChannelHandlerContext ctx, GameRequest request);
+	
+	public Result syncPlayerLocation(ChannelHandlerContext ctx, GameRequest request);
 	
 }

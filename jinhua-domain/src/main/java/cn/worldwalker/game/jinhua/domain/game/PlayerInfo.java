@@ -46,6 +46,12 @@ public class PlayerInfo {
 	/**在线状态1在线 0离线*/
 	private Integer onlineStatus;
 	
+	private String address;
+	
+	private String x;
+	
+	private String y;
+	
 	public Long getPlayerId() {
 		return playerId;
 	}
@@ -165,6 +171,24 @@ public class PlayerInfo {
 	}
 	public void setOnlineStatus(Integer onlineStatus) {
 		this.onlineStatus = onlineStatus;
+	}
+	public String getAddress() {
+		return address;
+	}
+	public void setAddress(String address) {
+		this.address = address;
+	}
+	public String getX() {
+		return x;
+	}
+	public void setX(String x) {
+		this.x = x;
+	}
+	public String getY() {
+		return y;
+	}
+	public void setY(String y) {
+		this.y = y;
 	}
 	
 }

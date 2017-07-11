@@ -21,6 +21,10 @@ public class Msg {
 	private Integer noticeType;
 	private String noticeContent;
 	private List<Long> noticePlayerList;
+	
+	private String address;
+	private String x;
+	private String y;
 	public Long getRoomId() {
 		return roomId;
 	}
@@ -122,6 +126,24 @@ public class Msg {
 	}
 	public void setNoticePlayerList(List<Long> noticePlayerList) {
 		this.noticePlayerList = noticePlayerList;
+	}
+	public String getX() {
+		return x;
+	}
+	public void setX(String x) {
+		this.x = x;
+	}
+	public String getY() {
+		return y;
+	}
+	public void setY(String y) {
+		this.y = y;
+	}
+	public String getAddress() {
+		return address;
+	}
+	public void setAddress(String address) {
+		this.address = address;
 	}
 	
 }

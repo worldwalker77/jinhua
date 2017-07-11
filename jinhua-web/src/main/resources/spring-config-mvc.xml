@@ -87,6 +87,13 @@
         </property>
     </bean>
     
+    <!--文件上传解析器 -->
+	<!-- id="multipartResolver"必须是multipartResolver -->
+  <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+   <!-- maxUploadSize:文件上传的最大值以byte为单位 -->
+   <property name="maxUploadSize" value="2048000"></property>
+  </bean>
+    
     <!-- 静态资源 -->
     <mvc:resources mapping="/css/**" location="/css/" />
     <mvc:resources mapping="/js/**" location="/js/" />

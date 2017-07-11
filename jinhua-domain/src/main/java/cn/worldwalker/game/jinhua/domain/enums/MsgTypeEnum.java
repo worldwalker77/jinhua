@@ -31,7 +31,8 @@ public enum MsgTypeEnum {
 	updatePlayerInfo(27, "玩家信息更新"),
 	notice(28, "公告通知"),
 	roomCardNumUpdate(29, "房卡数更新"),
-	sendEmoticon(30, "给某个玩家发送特殊的表情符号");
+	sendEmoticon(30, "给某个玩家发送特殊的表情符号"),
+	syncPlayerLocation(31, "玩家地理位置同步到服务端");
 	
 	public int msgType;
 	public String desc;

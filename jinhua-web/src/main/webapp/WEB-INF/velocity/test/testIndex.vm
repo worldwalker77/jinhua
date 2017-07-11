@@ -1,11 +1,18 @@
-<style type="text/css"> 
-		
-</style>
-
-this is testIndex
-
-<script type="text/javascript"> 
-	$(function(){ 
-	})
-	
-</script> 
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>上传文件 - Servlet3.0</title>
+</head>
+<body>
+<h2>上传文件 - Servlet3.0</h2>
+<form action="/game/upload" method="post"  enctype="multipart/form-data">
+  <p>
+     <label for="files">文件：</label>
+     <input type="file" name="file" id="file" multiple="multiple" />
+   </p>
+   <p>
+   <button>提交</button>
+   </p>
+</form>
+</body>
+</html>

@@ -63,13 +63,18 @@ public abstract class ProcessDisPatcher {
 			msg = new Msg();
 			request.setMsg(msg);
 		}
-		/**查看其它玩家信息的时候，玩家id是前端传过来的，不从后端获取*/
-		if (!MsgTypeEnum.queryPlayerInfo.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
-			msg.setPlayerId(userInfo.getPlayerId());
-		}
+		msg.setPlayerId(userInfo.getPlayerId());
 		if (msg.getRoomId() == null) {
 			msg.setRoomId(userInfo.getRoomId());
 		}
+		/**创建房间或者进入房间，则需要将地理位置信息设置到msg中*/
+		if (MsgTypeEnum.createRoom.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))
+			|| MsgTypeEnum.entryRoom.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
+			msg.setAddress(userInfo.getAddress());
+			msg.setX(userInfo.getX());
+			msg.setY(userInfo.getY());
+		}
+		
 		requestDispatcher(ctx, request);
 	}
 	

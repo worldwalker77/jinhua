@@ -1,7 +1,7 @@
 package cn.worldwalker.game.jinhua.web.game;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,12 +9,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import cn.worldwalker.game.jinhua.common.constant.Constant;
-import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
+import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
@@ -25,6 +29,7 @@ import cn.worldwalker.game.jinhua.service.game.GameService;
 @Controller
 @RequestMapping("game/")
 public class GameController {
+	
 	@Autowired
 	private JedisTemplate jedisTemplate;
 	
@@ -65,14 +70,32 @@ public class GameController {
 		GameRequest request = new GameRequest();
 		request.setMsg(msg);
 		return gameService.notice(null, request);
-		
 	}
-	public static void main(String[] args) {
-		Msg msg = new Msg();
-		msg.setFeedBack("投诉建议测试");
-		msg.setMobilePhone("13006339011");
-		msg.setFeedBackType(1);
-		System.out.println(JsonUtil.toJson(msg));
-	}
+	
+	@RequestMapping(value = "/index")
+    public String index(){
+        return "test/testIndex";
+    }
+	
+	@RequestMapping(value = "/upload",method = RequestMethod.POST)
+	@ResponseBody
+    public Result upload(@RequestPart("file") MultipartFile file, Model model,HttpServletRequest request) throws IOException {
+        Result result = new Result();
+		try {
+			File dir=new File(request.getSession().getServletContext().getRealPath("/uploads"));
+			if(!dir.exists()){
+			    dir.mkdirs();
+			}
+			String fileName = file.getOriginalFilename();
+			String path = dir.getAbsolutePath() + "\\" + fileName;
+			file.transferTo(new File(path));
+			result.setData("http://" + IPUtil.getLocalIp() + ":8080/uploads/" + fileName);
+		} catch (Exception e) {
+			result.setCode(1);
+			result.setDesc("系统异常");
+			e.printStackTrace();
+		}
+        return result;
+    }
 	
 }

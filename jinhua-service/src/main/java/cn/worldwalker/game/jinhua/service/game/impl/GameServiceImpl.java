@@ -1116,8 +1116,7 @@ public class GameServiceImpl implements GameService {
 		return result;
 	}
 	@Override
-	public Result queryOtherPlayerInfo(ChannelHandlerContext ctx,
-			GameRequest request) {
+	public Result queryPlayerInfo(ChannelHandlerContext ctx, GameRequest request) {
 		Result result = new Result();
 		Map<String, Object> data = new HashMap<String, Object>();
 		result.setData(data);
@@ -1129,25 +1128,34 @@ public class GameServiceImpl implements GameService {
 			return SessionContainer.sendErrorMsg(ctx, ResultCode.ROOM_NOT_EXIST, MsgTypeEnum.queryPlayerInfo.msgType, request);
 		}
 		List<PlayerInfo> playerList = roomInfo.getPlayerList();
-		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
-		if (!commonService.isExistPlayerInRoom(userInfo.getPlayerId(), playerList)) {
+		if (!commonService.isExistPlayerInRoom(msg.getPlayerId(), playerList)) {
 			return SessionContainer.sendErrorMsg(ctx, ResultCode.PLAYER_NOT_IN_ROOM, MsgTypeEnum.queryPlayerInfo.msgType, request);
 		}
-		PlayerInfo queryPlayer = null;
+		Long otherPlayerId = msg.getOtherPlayerId();
+		Long playerId = msg.getPlayerId();
+		PlayerInfo otherPlayer = null;
+		PlayerInfo curPlayer = null;
 		for(PlayerInfo player : playerList){
-			if (player.getPlayerId().equals(msg.getPlayerId())) {
-				queryPlayer = player;
-				break;
+			if (player.getPlayerId().equals(otherPlayerId)) {
+				otherPlayer = player;
+			}else if(player.getPlayerId().equals(playerId)){
+				curPlayer = player;
 			}
 		}
-		PlayerInfo newPalyer = new PlayerInfo();
-		newPalyer.setPlayerId(queryPlayer.getPlayerId());
-		newPalyer.setNickName(queryPlayer.getNickName());
-		newPalyer.setHeadImgUrl(queryPlayer.getHeadImgUrl());
-		newPalyer.setIp(queryPlayer.getIp());
-		result.setData(newPalyer);
+		if (otherPlayer != null) {
+			data.put("playerId", otherPlayer.getPlayerId());
+			data.put("nickName", otherPlayer.getNickName());
+			data.put("headImgUrl", otherPlayer.getHeadImgUrl());
+			data.put("address", otherPlayer.getAddress());
+			data.put("distance", "11km");
+		}else{
+			data.put("playerId", curPlayer.getPlayerId());
+			data.put("nickName", curPlayer.getNickName());
+			data.put("headImgUrl", curPlayer.getHeadImgUrl());
+			data.put("address", curPlayer.getAddress());
+		}
 		result.setMsgType(MsgTypeEnum.queryPlayerInfo.msgType);
-		SessionContainer.sendTextMsgByPlayerId(userInfo.getPlayerId(), result);
+		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
 		return result;
 	}
 	@Override
@@ -1269,6 +1277,21 @@ public class GameServiceImpl implements GameService {
 		data.put("chatMsg", msg.getChatMsg());
 		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
 		return result;
+	}
+
+	@Override
+	public Result syncPlayerLocation(ChannelHandlerContext ctx, GameRequest request) {
+		Result result = new Result();
+		result.setMsgType(MsgTypeEnum.syncPlayerLocation.msgType);
+		Msg msg = request.getMsg();
+		String token = request.getToken();
+		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(token);
+		userInfo.setAddress(msg.getAddress());
+		userInfo.setX(msg.getX());
+		userInfo.setY(msg.getY());
+		SessionContainer.setUserInfoToRedis(token, userInfo);
+		return result;
+		
 	}
 	
 }
