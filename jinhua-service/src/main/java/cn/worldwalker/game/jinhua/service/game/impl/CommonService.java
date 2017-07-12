@@ -345,6 +345,16 @@ public class CommonService {
 		return alivePlayerCount;
 	}
 	
+	public Integer getTotalStakeTimes(List<PlayerInfo> playerList){
+		Integer totalStakeTimes = playerList.get(0).getStakeTimes();
+		for(PlayerInfo player : playerList){
+			if (totalStakeTimes < player.getStakeTimes()) {
+				totalStakeTimes = player.getStakeTimes();
+			}
+		}
+		return totalStakeTimes;
+	}
+	
 	public boolean isExistPlayerInRoom(Long playerId, List<PlayerInfo> playerList){
 		for(PlayerInfo player : playerList){
 			if (player.getPlayerId().equals(playerId)) {

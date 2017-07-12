@@ -50,6 +50,8 @@ public class RoomInfo implements Serializable{
 	private Integer prePlayerStatus;
 	/**前一个说话玩家的跟注分数*/
 	private Integer prePlayerStakeScore;
+	/**当前局跟注轮数*/
+	private Integer totalStakeTimes;
 	
 	private List<PlayerInfo> playerList = new ArrayList<PlayerInfo>();
 	
@@ -172,6 +174,12 @@ public class RoomInfo implements Serializable{
 	}
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+	public Integer getTotalStakeTimes() {
+		return totalStakeTimes;
+	}
+	public void setTotalStakeTimes(Integer totalStakeTimes) {
+		this.totalStakeTimes = totalStakeTimes;
 	}
 	
 }

@@ -510,6 +510,7 @@ public class GameServiceImpl implements GameService {
 			newRoomInfo.setStatus(roomInfo.getStatus());
 			newRoomInfo.setRoomId(roomId);
 			newRoomInfo.setRoomOwnerId(roomInfo.getRoomOwnerId());
+			newRoomInfo.setTotalStakeTimes(roomInfo.getStakeTimesLimit());
 			for(PlayerInfo player : playerList){
 				PlayerInfo newPlayer = new PlayerInfo();
 				newPlayer.setPlayerId(player.getPlayerId());
@@ -541,6 +542,7 @@ public class GameServiceImpl implements GameService {
 		data.put("playerId", msg.getPlayerId());
 		data.put("stakeScore", msg.getCurStakeScore());
 		data.put("stakeTimes", curPlayerStakeTimes);
+		data.put("totalStakeTimes", commonService.getTotalStakeTimes(playerList));
 		data.put("curPlayerId", commonService.getNextOperatePlayerId(playerList, msg.getPlayerId()));
 		SessionContainer.sendTextMsgByPlayerIdSet(roomId, commonService.getPlayerIdSet(playerList), result);
 		return result;
