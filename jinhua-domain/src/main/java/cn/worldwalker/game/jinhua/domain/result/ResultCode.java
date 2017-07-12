@@ -15,7 +15,8 @@ public enum ResultCode {
 	PLAYER_STATUS_ERROR_1(11, "当前玩家状态错误，必须是未看牌或者已看牌", "当前玩家状态错误，必须是未看牌或者已看牌"),
 	ROOM_CARD_NOT_ENOUGH(12, "房卡数量不足", "房卡数量不足"),
 	ROOM_CARD_DEDUCT_THREE_TIMES_FAIL(13, "房卡扣除重试三次都失败", "房卡扣除重试三次都失败"),
-	ROOM_CARD_DEDUCT_EXCEPTION(14, "扣除房卡异常", "扣除房卡异常");
+	ROOM_CARD_DEDUCT_EXCEPTION(14, "扣除房卡异常", "扣除房卡异常"),
+	MUST_WATCH_CARD(15, "玩家看牌才能参与比牌", "玩家看牌才能参与比牌");
 	public int code;
 	public String insideDesc;
 	public String returnDesc;

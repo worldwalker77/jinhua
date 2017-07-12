@@ -43,6 +43,7 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 				&& !MsgTypeEnum.heartBeat.equals(msgTypeEnum)
 				&& !MsgTypeEnum.userFeedback.equals(msgTypeEnum)
 				&& !MsgTypeEnum.userRecord.equals(msgTypeEnum)
+				&& !MsgTypeEnum.queryPlayerInfo.equals(msgTypeEnum)
 				&& !MsgTypeEnum.syncPlayerLocation.equals(msgTypeEnum)) {
 				if (MsgTypeEnum.refreshRoom.equals(msgTypeEnum) && msg.getRoomId() != null) {
 					lock = RoomLockContainer.getLockByRoomId(msg.getRoomId());
@@ -184,10 +185,6 @@ public class TextMsgProcessDispatcher extends ProcessDisPatcher{
 					gameService.refreshRoom(ctx, request);
 					break;
 				case queryPlayerInfo:
-					if (msg.getRoomId() == null) {
-						SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, msgType, request);
-						return;
-					}
 					gameService.queryPlayerInfo(ctx, request);
 					break;
 				case chatMsg:

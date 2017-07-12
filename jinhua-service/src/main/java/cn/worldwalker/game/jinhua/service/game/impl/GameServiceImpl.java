@@ -235,6 +235,10 @@ public class GameServiceImpl implements GameService {
 		playerInfo.setWinTimes(0);
 		playerInfo.setLoseTimes(0);
 		playerInfo.setMaxCardType(CardTypeEnum.C235.cardType);
+		/**设置地理位置信息*/
+		playerInfo.setAddress(msg.getAddress());
+		playerInfo.setX(msg.getX());
+		playerInfo.setY(msg.getY());
 		playerList.add(playerInfo);
 		roomInfo.setPlayerList(playerList);
 		
@@ -320,6 +324,10 @@ public class GameServiceImpl implements GameService {
 		playerInfo.setLoseTimes(0);
 		playerInfo.setMaxCardType(CardTypeEnum.C235.cardType);
 		playerInfo.setIp(userInfo.getRemoteIp());
+		/**设置地理位置信息*/
+		playerInfo.setAddress(msg.getAddress());
+		playerInfo.setX(msg.getX());
+		playerInfo.setY(msg.getY());
 		playerList.add(playerInfo);
 		roomInfo.setUpdateTime(new Date());
 		/**将当前加入的玩家信息加入房间，并设置进缓存*/
@@ -689,6 +697,11 @@ public class GameServiceImpl implements GameService {
 			return result;
 		}
 		
+		/**如果活着的玩家大于2家，则比牌的两个玩家都必须是看牌*/
+		if (selfPlayer.getStatus().equals(PlayerStatusEnum.notWatch.status) 
+			|| otherPlayer.getStatus().equals(PlayerStatusEnum.notWatch.status)) {
+			return SessionContainer.sendErrorMsg(ctx, ResultCode.MUST_WATCH_CARD, MsgTypeEnum.stake.msgType, request);
+		}
 		/**如果活着的玩家大于2家，则只需要将此两个玩比牌*/
 		Long curPlayerId = null;
 		int re = CardRule.compareTwoPlayerCards(selfPlayer, otherPlayer);
@@ -1147,7 +1160,8 @@ public class GameServiceImpl implements GameService {
 			data.put("nickName", otherPlayer.getNickName());
 			data.put("headImgUrl", otherPlayer.getHeadImgUrl());
 			data.put("address", otherPlayer.getAddress());
-			data.put("distance", "11km");
+			String distance = commonService.getLatLngDistance(curPlayer, otherPlayer);
+			data.put("distance", distance);
 		}else{
 			data.put("playerId", curPlayer.getPlayerId());
 			data.put("nickName", curPlayer.getNickName());

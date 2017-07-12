@@ -9,6 +9,7 @@
   <p>
      <label for="files">文件：</label>
      <input type="file" name="file" id="file" multiple="multiple" />
+     <input type="text" name="token" id="token" />
    </p>
    <p>
    <button>提交</button>

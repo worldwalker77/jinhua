@@ -91,7 +91,7 @@
 	<!-- id="multipartResolver"必须是multipartResolver -->
   <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
    <!-- maxUploadSize:文件上传的最大值以byte为单位 -->
-   <property name="maxUploadSize" value="2048000"></property>
+   <property name="maxUploadSize" value="4096000"></property>
   </bean>
     
     <!-- 静态资源 -->
@@ -101,5 +101,6 @@
     <mvc:resources mapping="/html/**" location="/html/" />
     <mvc:resources mapping="/fonts/**" location="/fonts/" />
     <mvc:resources mapping="/icons/**" location="/icons/" />
+    <mvc:resources mapping="/uploadfiles/**" location="/uploadfiles/" />
     
 </beans>

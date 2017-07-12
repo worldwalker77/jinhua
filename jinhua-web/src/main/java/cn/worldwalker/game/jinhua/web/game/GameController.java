@@ -22,9 +22,11 @@ import cn.worldwalker.game.jinhua.common.utils.IPUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
+import cn.worldwalker.game.jinhua.domain.game.UserInfo;
 import cn.worldwalker.game.jinhua.domain.result.Result;
 import cn.worldwalker.game.jinhua.domain.result.ResultCode;
 import cn.worldwalker.game.jinhua.service.game.GameService;
+import cn.worldwalker.game.jinhua.service.session.SessionContainer;
 
 @Controller
 @RequestMapping("game/")
@@ -79,17 +81,30 @@ public class GameController {
 	
 	@RequestMapping(value = "/upload",method = RequestMethod.POST)
 	@ResponseBody
-    public Result upload(@RequestPart("file") MultipartFile file, Model model,HttpServletRequest request) throws IOException {
-        Result result = new Result();
+    public Result upload(@RequestPart("file") MultipartFile file, String token, Model model,HttpServletRequest request, HttpServletResponse response) throws IOException {
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		Result result = new Result();
+        if (file == null || StringUtils.isBlank(token)) {
+        	result.setCode(ResultCode.PARAM_ERROR.code);
+        	result.setDesc(ResultCode.PARAM_ERROR.returnDesc);
+        	return result;
+		}
+        UserInfo userInfo = SessionContainer.getUserInfoFromRedis(token);
+        if (userInfo == null) {
+        	result.setCode(ResultCode.NEED_LOGIN.code);
+        	result.setDesc(ResultCode.NEED_LOGIN.returnDesc);
+        	return result;
+		}
+        Long playerId = userInfo.getPlayerId();
 		try {
-			File dir=new File(request.getSession().getServletContext().getRealPath("/uploads"));
+			File dir=new File(request.getSession().getServletContext().getRealPath("/uploadfiles/" + playerId));
 			if(!dir.exists()){
 			    dir.mkdirs();
 			}
 			String fileName = file.getOriginalFilename();
-			String path = dir.getAbsolutePath() + "\\" + fileName;
+			String path = dir.getAbsolutePath() + "/" + fileName;
 			file.transferTo(new File(path));
-			result.setData("http://" + IPUtil.getLocalIp() + ":8080/uploads/" + fileName);
+			result.setData("http://" + IPUtil.getLocalIp() + ":8080/uploadfiles/" + playerId + "/" + fileName);
 		} catch (Exception e) {
 			result.setCode(1);
 			result.setDesc("系统异常");
