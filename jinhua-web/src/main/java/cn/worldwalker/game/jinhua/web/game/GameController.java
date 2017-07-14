@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import cn.worldwalker.game.jinhua.common.constant.Constant;
 import cn.worldwalker.game.jinhua.common.utils.IPUtil;
+import cn.worldwalker.game.jinhua.common.utils.JsonUtil;
 import cn.worldwalker.game.jinhua.common.utils.redis.JedisTemplate;
 import cn.worldwalker.game.jinhua.domain.game.GameRequest;
 import cn.worldwalker.game.jinhua.domain.game.Msg;
@@ -31,6 +34,8 @@ import cn.worldwalker.game.jinhua.service.session.SessionContainer;
 @Controller
 @RequestMapping("game/")
 public class GameController {
+	
+	private static final Log log = LogFactory.getLog(GameController.class);
 	
 	@Autowired
 	private JedisTemplate jedisTemplate;
@@ -82,6 +87,7 @@ public class GameController {
 	@RequestMapping(value = "/upload",method = RequestMethod.POST)
 	@ResponseBody
     public Result upload(@RequestPart("file") MultipartFile file, String token, Model model,HttpServletRequest request, HttpServletResponse response) throws IOException {
+		log.info("请求, 上传语音文件， file:" + file.toString() + ", token:" + token);
 		response.addHeader("Access-Control-Allow-Origin", "*");
 		Result result = new Result();
         if (file == null || StringUtils.isBlank(token)) {
@@ -110,6 +116,7 @@ public class GameController {
 			result.setDesc("系统异常");
 			e.printStackTrace();
 		}
+		log.info("返回, 上传语音文件， result:" + JsonUtil.toJson(result));
         return result;
     }
 	

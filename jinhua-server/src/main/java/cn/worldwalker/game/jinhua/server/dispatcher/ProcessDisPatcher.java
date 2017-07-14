@@ -64,9 +64,12 @@ public abstract class ProcessDisPatcher {
 			request.setMsg(msg);
 		}
 		msg.setPlayerId(userInfo.getPlayerId());
-		if (msg.getRoomId() == null) {
+		if (!MsgTypeEnum.entryRoom.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
 			msg.setRoomId(userInfo.getRoomId());
 		}
+//		if (msg.getRoomId() == null) {
+//			msg.setRoomId(userInfo.getRoomId());
+//		}
 		/**创建房间或者进入房间，则需要将地理位置信息设置到msg中*/
 		if (MsgTypeEnum.createRoom.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))
 			|| MsgTypeEnum.entryRoom.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))) {
