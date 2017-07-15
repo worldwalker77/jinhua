@@ -37,9 +37,7 @@ public abstract class ProcessDisPatcher {
 			SessionContainer.sendErrorMsg(ctx, ResultCode.PARAM_ERROR, request.getMsgType(), request);
 			return;
 		}
-		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))/** && !MsgTypeEnum.heartBeat.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))*/) {
-			logger.info("请求 : " + MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()).desc + " : " + textMsg);
-		}
+		
 		/**
 		 * token登录检验
 		 */
@@ -77,7 +75,9 @@ public abstract class ProcessDisPatcher {
 			msg.setX(userInfo.getX());
 			msg.setY(userInfo.getY());
 		}
-		
+		if ("1".equals(jedisTemplate.get(Constant.jinhuaLogInfoFuse))/** && !MsgTypeEnum.heartBeat.equals(MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()))*/) {
+			logger.info("请求 : " + MsgTypeEnum.getMsgTypeEnumByType(request.getMsgType()).desc + " : " + JsonUtil.toJson(request));
+		}
 		requestDispatcher(ctx, request);
 	}
 	

@@ -889,7 +889,7 @@ public class GameServiceImpl implements GameService {
 			if (player.getPlayerId().equals(msg.getPlayerId())) {
 				player.setDissolveStatus(DissolveStatusEnum.agree.status);
 			}
-			if (player.getDissolveStatus().equals(DissolveStatusEnum.agree.status)) {
+			if (DissolveStatusEnum.agree.status.equals(player.getDissolveStatus())) {
 				agreeDissolveCount++;
 			}
 		}
@@ -1200,6 +1200,12 @@ public class GameServiceImpl implements GameService {
 			playerIdList.add(msg.getPlayerId());
 			playerIdList.add(msg.getOtherPlayerId());
 			SessionContainer.sendTextMsgByPlayerIdList(playerIdList, result);
+			return result;
+		}else if(ChatTypeEnum.voiceChat.type == msg.getChatType()){
+			data.put("playerId", msg.getPlayerId());
+			data.put("chatMsg", msg.getChatMsg());
+			data.put("chatType", msg.getChatType());
+			SessionContainer.sendTextMsgByPlayerIdSet(roomId, commonService.getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), result);
 			return result;
 		}
 		

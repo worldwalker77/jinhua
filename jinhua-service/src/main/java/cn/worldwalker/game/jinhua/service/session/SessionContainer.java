@@ -216,6 +216,10 @@ public class SessionContainer {
 				jedisTemplate.hset(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(playerId), roomId +"_" + System.currentTimeMillis() );
 				/**设置当前玩家为离线状态并通知其他玩家此玩家离线*/
 				RoomInfo roomInfo = getRoomInfoFromRedis(Long.valueOf(roomId));
+				if (roomInfo == null) {
+					cleanPlayerAndRoomInfo(Long.valueOf(roomId), String.valueOf(playerId));
+					return;
+				}
 				List<PlayerInfo> playerList = roomInfo.getPlayerList();
 				commonService.setOnlineStatus(playerList, playerId, OnlineStatusEnum.offline);
 				setRoomInfoToRedis(Long.valueOf(roomId), roomInfo);
@@ -251,7 +255,7 @@ public class SessionContainer {
 		return sessionMap;
 	}
 	
-	public static void cleanPlayerAndRoomInfo(Long roomId, String[] playerIds){
+	public static void cleanPlayerAndRoomInfo(Long roomId, String... playerIds){
 		jedisTemplate.hdel(Constant.jinhuaRoomIdRoomInfoMap, String.valueOf(roomId));
 		jedisTemplate.hdel(Constant.jinhuaRoomIdMsgIdMap, String.valueOf(roomId));
 		jedisTemplate.hdel(Constant.jinhuaPlayerIdRoomIdMap, playerIds);

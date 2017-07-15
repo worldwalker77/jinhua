@@ -440,10 +440,13 @@ public class CommonService {
 		   || StringUtils.isBlank(otherPlayer.getX()) || StringUtils.isBlank(otherPlayer.getX())) {
 		   return null;
 	   }
+	   if ("0.0".equals(startXStr) && "0.0".equals(startYStr) || "0.0".equals(endXStr) && "0.0".equals(endYStr)) {
+		   return null;
+	   }
 	   double lat1 = (Math.PI/180)*Double.valueOf(startXStr);
-	   double lat2 = (Math.PI/180)*Double.valueOf(startYStr);
+	   double lat2 = (Math.PI/180)*Double.valueOf(endXStr);
 	   
-	   double lon1 = (Math.PI/180)*Double.valueOf(endXStr);
+	   double lon1 = (Math.PI/180)*Double.valueOf(startYStr);
 	   double lon2 = (Math.PI/180)*Double.valueOf(endYStr);
 	   
 	   //地球半径
@@ -464,4 +467,14 @@ public class CommonService {
 	   }
 
 	 }
+	
+	public static void main(String[] args) {
+		PlayerInfo curPlayer = new PlayerInfo();
+		PlayerInfo otherPlayer = new PlayerInfo();
+		curPlayer.setX("108.880901");
+		curPlayer.setY("34.18459");
+		otherPlayer.setX("115.009994");
+		otherPlayer.setY("31.169439");
+//		System.out.println(getLatLngDistance(curPlayer, otherPlayer));
+	}
 }
