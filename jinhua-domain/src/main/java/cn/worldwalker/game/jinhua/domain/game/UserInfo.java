@@ -20,7 +20,7 @@ public class UserInfo {
 	
 	private String remoteIp;
 	
-	private Integer roomCardNum;
+	private Integer roomCardNum = 0;
 	
 	private String address;
 	

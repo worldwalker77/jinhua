@@ -226,8 +226,6 @@ public class GameServiceImpl implements GameService {
 		List<PlayerInfo> playerList = new ArrayList<PlayerInfo>();
 		PlayerInfo playerInfo = new PlayerInfo();
 		playerInfo.setPlayerId(msg.getPlayerId());
-		playerInfo.setNickName("NickName_" + msg.getPlayerId());
-		playerInfo.setHeadImgUrl("http://img.zcool.cn/community/01e282574bc0126ac72525ae39ce5f.jpg");
 		playerInfo.setLevel(1);
 		playerInfo.setOrder(1);
 		playerInfo.setStatus(PlayerStatusEnum.notReady.status);
@@ -246,6 +244,8 @@ public class GameServiceImpl implements GameService {
 		UserInfo userInfo = SessionContainer.getUserInfoFromRedis(request.getToken());
 		/**设置当前用户ip*/
 		playerInfo.setIp(userInfo.getRemoteIp());
+		playerInfo.setNickName(userInfo.getNickName());
+		playerInfo.setHeadImgUrl(userInfo.getHeadImgUrl());
 		userInfo.setRoomId(roomId);
 		SessionContainer.setUserInfoToRedis(request.getToken(), userInfo);
 		/**将当前房间的信息设置到redis中*/
@@ -314,8 +314,8 @@ public class GameServiceImpl implements GameService {
 		
 		PlayerInfo playerInfo = new PlayerInfo();
 		playerInfo.setPlayerId(msg.getPlayerId());
-		playerInfo.setNickName("nickName_" + msg.getPlayerId());
-		playerInfo.setHeadImgUrl("http://img.zcool.cn/community/01e282574bc0126ac72525ae39ce5f.jpg");
+		playerInfo.setNickName(userInfo.getNickName());
+		playerInfo.setHeadImgUrl(userInfo.getHeadImgUrl());
 		playerInfo.setLevel(1);
 		playerInfo.setOrder(playerList.size() + 1);
 		playerInfo.setStatus(PlayerStatusEnum.notReady.status);
@@ -736,6 +736,7 @@ public class GameServiceImpl implements GameService {
 	@Override
 	public Result discardCards(ChannelHandlerContext ctx, GameRequest request) {
 		Result result = new Result();
+		result.setMsgType(MsgTypeEnum.discardCards.msgType);
 		Map<String, Object> data = new HashMap<String, Object>();
 		result.setData(data);
 		
