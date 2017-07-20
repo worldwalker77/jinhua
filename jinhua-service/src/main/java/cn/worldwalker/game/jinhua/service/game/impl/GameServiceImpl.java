@@ -100,9 +100,9 @@ public class GameServiceImpl implements GameService {
 		userInfo.setServerIp("119.23.57.236");
 		userInfo.setPort("3389");
 		userInfo.setRemoteIp(IPUtil.getRemoteIp(request));
+		userInfo.setHeadImgUrl(weixinUserInfo.getHeadImgUrl());
 		String loginToken = genToken(userModel.getId());
 		SessionContainer.setUserInfoToRedis(loginToken, userInfo);
-		userInfo.setHeadImgUrl(weixinUserInfo.getHeadImgUrl());
 		userInfo.setToken(loginToken);
 		result.setData(userInfo);
 		return result;

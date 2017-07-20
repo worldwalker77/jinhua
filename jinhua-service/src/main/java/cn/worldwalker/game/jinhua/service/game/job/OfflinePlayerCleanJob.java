@@ -49,7 +49,6 @@ public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 						SessionContainer.cleanPlayerAndRoomInfo(Long.valueOf(roomIdStr), playerIds);
 						return;
 					}
-					System.out.println("roomInfo : " + JsonUtil.toJson(roomInfo));
 					List<PlayerInfo> playerList = roomInfo.getPlayerList();
 					Result result = new Result();
 					result.setMsgType(MsgTypeEnum.dissolveRoomCausedByOffline.msgType);
@@ -57,7 +56,7 @@ public class OfflinePlayerCleanJob extends SingleServerJobByRedis{
 					data.put("playerId", playerIdStr);
 					result.setData(data);
 					SessionContainer.sendTextMsgByPlayerIdSet(Long.valueOf(roomIdStr), commonService.getPlayerIdSetWithoutSelf(playerList, Long.valueOf(playerIdStr)), result);
-					SessionContainer.cleanPlayerAndRoomInfo(Long.valueOf(roomIdStr), playerIds);
+					SessionContainer.cleanPlayerAndRoomInfo(Long.valueOf(roomIdStr), commonService.getPlayerIdArr(playerList));
 				}
 			}
 		}

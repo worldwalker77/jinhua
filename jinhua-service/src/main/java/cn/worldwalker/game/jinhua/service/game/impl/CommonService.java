@@ -163,6 +163,15 @@ public class CommonService {
 		return set;
 	}
 	
+	public String[] getPlayerIdArr(List<PlayerInfo> playerList){
+		int size = playerList.size();
+		String[] arr = new String[size];
+		for(int i = 0; i < size; i++){
+			arr[i] = String.valueOf(playerList.get(i).getPlayerId());
+		}
+		return arr;
+	}
+	
 	/**
 	 * 计算各玩家得分及赢家
 	 * @param roomInfo
