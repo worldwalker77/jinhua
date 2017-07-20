@@ -990,6 +990,7 @@ public class GameServiceImpl implements GameService {
 					newPlayer.setRoomCardNum(player.getRoomCardNum());
 					newPlayer.setLevel(player.getLevel());
 					newPlayer.setStatus(player.getStatus());
+					newPlayer.setOnlineStatus(OnlineStatusEnum.online.status);
 					newRoomInfo.getPlayerList().add(newPlayer);
 				}
 				result.setMsgType(MsgTypeEnum.refreshRoom.msgType);
@@ -1011,11 +1012,10 @@ public class GameServiceImpl implements GameService {
 					if (PlayerStatusEnum.watch.status.equals(player.getStatus()) && player.getPlayerId().equals(msg.getPlayerId())) {
 						newPlayer.setCardList(player.getCardList());
 					}
-					
 					newPlayer.setTotalScore(player.getTotalScore());
 					newPlayer.setCurStakeScore(player.getCurStakeScore());
 					newPlayer.setStakeTimes(player.getStakeTimes());
-					
+					newPlayer.setOnlineStatus(OnlineStatusEnum.online.status);
 					newRoomInfo.getPlayerList().add(newPlayer);
 				}
 				result.setMsgType(MsgTypeEnum.refreshRoom.msgType);
@@ -1038,6 +1038,7 @@ public class GameServiceImpl implements GameService {
 					if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
 						newPlayer.setCardList(player.getCardList());
 					}
+					newPlayer.setOnlineStatus(OnlineStatusEnum.online.status);
 					newRoomInfo.getPlayerList().add(newPlayer);
 				}
 				result.setMsgType(MsgTypeEnum.refreshRoom.msgType);
@@ -1065,6 +1066,7 @@ public class GameServiceImpl implements GameService {
 					if (!PlayerStatusEnum.autoDiscard.status.equals(player.getStatus())) {
 						newPlayer.setCardList(player.getCardList());
 					}
+					newPlayer.setOnlineStatus(OnlineStatusEnum.online.status);
 					newRoomInfo.getPlayerList().add(newPlayer);
 				}
 				result.setMsgType(MsgTypeEnum.refreshRoom.msgType);
@@ -1074,17 +1076,24 @@ public class GameServiceImpl implements GameService {
 			default:
 				break;
 		}
-		/**1为断线后的刷新，所以需要设置在线状态，并通知其他玩家*/
-		if (msg.getRefreshType() == 1) {
-			commonService.setOnlineStatus(playerList, msg.getPlayerId(), OnlineStatusEnum.online);
-			/**删除此玩家的离线标记*/
-			jedisTemplate.hdel(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(msg.getPlayerId()));
-			long msgId = SessionContainer.sendTextMsgByPlayerIdSet(roomId, 
-					commonService.getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), 
-					new Result(0, null, MsgTypeEnum.onlineNotice.msgType));
-			result.setMsgId(msgId);
-		}
+		/**返回给当前玩家刷新信息*/
 		SessionContainer.sendTextMsgByPlayerId(msg.getPlayerId(), result);
+		
+		
+		/**设置当前玩家缓存中为在线状态*/
+		commonService.setOnlineStatus(playerList, msg.getPlayerId(), OnlineStatusEnum.online);
+		SessionContainer.setRoomInfoToRedis(roomId, roomInfo);
+		
+		/**给其他的玩家发送当前玩家上线通知*/
+		Result result1 = new Result();
+		Map<String, Object> data1 = new HashMap<String, Object>();
+		result1.setData(data1);
+		data1.put("playerId", msg.getPlayerId());
+		result1.setMsgType(MsgTypeEnum.onlineNotice.msgType);
+		SessionContainer.sendTextMsgByPlayerIdSet(roomId, commonService.getPlayerIdSetWithoutSelf(playerList, msg.getPlayerId()), result1);
+		/**删除此玩家的离线标记*/
+		jedisTemplate.hdel(Constant.jinhuaOfflinePlayerIdTimeMap, String.valueOf(msg.getPlayerId()));
+		
 		return result;
 	}
 	
